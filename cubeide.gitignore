@@ -1,0 +1,21 @@
+# STM32CubeIDE - Build artifacts
+Debug/
+Release/
+bin/
+obj/
+
+# STM32CubeIDE - Temporary files
+*.su
+*.d
+*.o
+*.elf
+*.hex
+*.bin
+*.map
+*.list
+
+# STM32CubeIDE - Local settings and metadata
+.metadata/
+.settings/
+.launch
+.mxproject
