@@ -1,0 +1,8 @@
+Record=TopLevelDocument|FileName=External_Connectors.SchDoc|SheetNumber=7
+Record=NoMainPathDocument|SourceDocument=External_Connectors.SchDoc|FileName=Logic_Level_Output.SchDoc|SheetNumber=6
+Record=NoMainPathDocument|SourceDocument=External_Connectors.SchDoc|FileName=MCU.SchDoc|SheetNumber=3
+Record=NoMainPathDocument|SourceDocument=External_Connectors.SchDoc|FileName=Measurements.SchDoc|SheetNumber=8
+Record=NoMainPathDocument|SourceDocument=External_Connectors.SchDoc|FileName=Negative_Output.SchDoc|SheetNumber=5
+Record=NoMainPathDocument|SourceDocument=External_Connectors.SchDoc|FileName=Positive_Output.SchDoc|SheetNumber=4
+Record=NoMainPathDocument|SourceDocument=External_Connectors.SchDoc|FileName=USB_C_Connectors.SchDoc|SheetNumber=2
+Record=NoMainPathDocument|SourceDocument=External_Connectors.SchDoc|FileName=USBC_PD_Controller.SchDoc|SheetNumber=1
