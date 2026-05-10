@@ -23,7 +23,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "System_Functions.h"
+#include "USB_PD_core.h"
+#include "usb_cmd.h"
+#include "System_RTOS.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,29 +68,41 @@ const osThreadAttr_t mainSystemTask_attributes = {
 osThreadId_t ledStatusTaskHandle;
 const osThreadAttr_t ledStatusTask_attributes = {
   .name = "ledStatusTask",
-  .priority = (osPriority_t) osPriorityBelowNormal,
+  .priority = (osPriority_t) osPriorityBelowNormal6,
   .stack_size = 128 * 4
 };
 /* Definitions for usbCommandTask */
 osThreadId_t usbCommandTaskHandle;
 const osThreadAttr_t usbCommandTask_attributes = {
   .name = "usbCommandTask",
-  .priority = (osPriority_t) osPriorityBelowNormal,
+  .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 128 * 4
 };
 /* Definitions for vMeasureTask */
 osThreadId_t vMeasureTaskHandle;
 const osThreadAttr_t vMeasureTask_attributes = {
   .name = "vMeasureTask",
-  .priority = (osPriority_t) osPriorityBelowNormal,
+  .priority = (osPriority_t) osPriorityBelowNormal7,
   .stack_size = 128 * 4
 };
 /* Definitions for iMeasureTask */
 osThreadId_t iMeasureTaskHandle;
 const osThreadAttr_t iMeasureTask_attributes = {
   .name = "iMeasureTask",
-  .priority = (osPriority_t) osPriorityBelowNormal,
+  .priority = (osPriority_t) osPriorityBelowNormal7,
   .stack_size = 128 * 4
+};
+/* Definitions for cmdResponseTask */
+osThreadId_t cmdResponseTaskHandle;
+const osThreadAttr_t cmdResponseTask_attributes = {
+  .name = "cmdResponseTask",
+  .priority = (osPriority_t) osPriorityNormal1,
+  .stack_size = 512 * 4
+};
+/* Definitions for serialDataQueue */
+osMessageQueueId_t serialDataQueueHandle;
+const osMessageQueueAttr_t serialDataQueue_attributes = {
+  .name = "serialDataQueue"
 };
 /* USER CODE BEGIN PV */
 
@@ -104,11 +119,6 @@ static void MX_USART2_UART_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_SPI3_Init(void);
-void StartDefaultTask(void *argument);
-void StartTask02(void *argument);
-void StartTask03(void *argument);
-void StartTask04(void *argument);
-void StartTask05(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -175,6 +185,10 @@ int main(void)
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* creation of serialDataQueue */
+  serialDataQueueHandle = osMessageQueueNew (12, sizeof(SerialMsg_t), &serialDataQueue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -184,16 +198,19 @@ int main(void)
   mainSystemTaskHandle = osThreadNew(StartDefaultTask, NULL, &mainSystemTask_attributes);
 
   /* creation of ledStatusTask */
-  ledStatusTaskHandle = osThreadNew(StartTask02, NULL, &ledStatusTask_attributes);
+  ledStatusTaskHandle = osThreadNew(StartBlinkyTask, NULL, &ledStatusTask_attributes);
 
   /* creation of usbCommandTask */
-  usbCommandTaskHandle = osThreadNew(StartTask03, NULL, &usbCommandTask_attributes);
+  usbCommandTaskHandle = osThreadNew(StartusbCommandTask, NULL, &usbCommandTask_attributes);
 
   /* creation of vMeasureTask */
-  vMeasureTaskHandle = osThreadNew(StartTask04, NULL, &vMeasureTask_attributes);
+  vMeasureTaskHandle = osThreadNew(StartvMeasureTask, NULL, &vMeasureTask_attributes);
 
   /* creation of iMeasureTask */
-  iMeasureTaskHandle = osThreadNew(StartTask05, NULL, &iMeasureTask_attributes);
+  iMeasureTaskHandle = osThreadNew(StartiMeasureTask, NULL, &iMeasureTask_attributes);
+
+  /* creation of cmdResponseTask */
+  cmdResponseTaskHandle = osThreadNew(StartResponseTask, NULL, &cmdResponseTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -715,105 +732,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
-
-/* USER CODE BEGIN Header_StartDefaultTask */
-/**
-  * @brief  Function implementing the mainSystemTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
-{
-  /* init code for USB_Device */
-  MX_USB_Device_Init();
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for(;;)
-  {
-	//TODO: create/start tasks here based on queue?
-    osDelay(1);
-  }
-  /* USER CODE END 5 */
-}
-
-/* USER CODE BEGIN Header_StartTask02 */
-/**
-* @brief Function implementing the ledStatusTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask02 */
-void StartTask02(void *argument)
-{
-  /* USER CODE BEGIN StartTask02 */
-  /* Infinite loop */
-  for(;;)
-  {
-	//TODO: Check system status, update LEDS
-	HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
-    osDelay(500);
-  }
-  /* USER CODE END StartTask02 */
-}
-
-/* USER CODE BEGIN Header_StartTask03 */
-/**
-* @brief Function implementing the usbCommandTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask03 */
-void StartTask03(void *argument)
-{
-  /* USER CODE BEGIN StartTask03 */
-#define USB_RESPONSE_TIME_MS 25
-  /* Infinite loop */
-  for(;;)
-  {
-	//TODO: Implement USB_CMD with response time < 25? ms
-    osDelay(USB_RESPONSE_TIME_MS);
-  }
-  /* USER CODE END StartTask03 */
-}
-
-/* USER CODE BEGIN Header_StartTask04 */
-/**
-* @brief Function implementing the vMeasureTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask04 */
-void StartTask04(void *argument)
-{
-  /* USER CODE BEGIN StartTask04 */
-  /* Infinite loop */
-  for(;;)
-  {
-	//TODO: Measure voltage, update to global struct, measure next voltage on next task call, repeat
-    osDelay(1);
-  }
-  /* USER CODE END StartTask04 */
-}
-
-/* USER CODE BEGIN Header_StartTask05 */
-/**
-* @brief Function implementing the iMeasureTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask05 */
-void StartTask05(void *argument)
-{
-  /* USER CODE BEGIN StartTask05 */
-  /* Infinite loop */
-  for(;;)
-  {
-    //TODO: Measure current, update to global struct, measure next current on next task call, repeat
-    osDelay(1);
-  }
-  /* USER CODE END StartTask05 */
-}
 
 /**
   * @brief  Period elapsed callback in non blocking mode
