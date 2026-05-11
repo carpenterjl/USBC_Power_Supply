@@ -42,6 +42,8 @@ typedef struct
 	uint32_t ADC_Channel;
 }I_ADC;
 
+extern ADC_HandleTypeDef hadc1;
+extern uint16_t adc_dma_buffer[11];
 void SetPositiveSupply(float set_voltage, float max_current);
 void SetNegativeSupply(float set_voltage, float max_current);
 void DisableAllOutputs(void);
@@ -64,8 +66,8 @@ typedef enum {
 
 typedef struct {
     uint8_t commandID;
-    uint16_t value;
-    MsgSource_t requesterTask; // Optional: so the response task knows who to notify
+    int16_t value;
+    MsgSource_t requesterTask;
 } SerialMsg_t;
 
 extern osMessageQueueId_t serialDataQueueHandle;

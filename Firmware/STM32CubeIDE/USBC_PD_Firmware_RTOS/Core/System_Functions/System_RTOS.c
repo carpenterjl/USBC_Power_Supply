@@ -21,6 +21,10 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   int Usb_Port = 0;
 
+  HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buffer, 11);
+
   USBC_PD_Init(Usb_Port);
 
   osDelay(1000/portTICK_PERIOD_MS);
@@ -140,6 +144,7 @@ void StartResponseTask(void *argument)
   /* USER CODE BEGIN StartResponseTask */
 	SerialMsg_t messageInQueue;
 	char response[16] = {'\0'};
+	float voltage,current = 0;
   /* Infinite loop */
   for(;;)
   {
@@ -151,70 +156,129 @@ void StartResponseTask(void *argument)
 			  {
 			  	  	/* --- PD & Voltage Settings --- */
 					case USB_PD_SET:
+						voltage = (float)messageInQueue.value / 1000.0f;
+						Update_PDO(0, 2, voltage*1000, 1000);
+						Send_Soft_reset_Message(0);
+						sprintf(response, "OK");
 					break;
 					case USB_PD_GET:
 					break;
 					case VPOS_SET:
+						voltage = (float)messageInQueue.value / 1000.0f;
+						SetPositiveSupply(voltage, 0);
+						sprintf(response, "OK");
 					break;
 					case VNEG_SET:
+						voltage = (float)messageInQueue.value / 1000.0f;
+						SetNegativeSupply(voltage, 0);
+						sprintf(response, "OK");
 					break;
 
 					/* --- Voltage Rails Getters --- */
 					case V3V3_GET:
+						voltage = (float)adc_dma_buffer[5] / 4095.0f * 2.5f * 2;
+						sprintf(response, "%.3f", voltage);
 					break;
 					case V2V5_GET:
+						voltage = (float)adc_dma_buffer[6] / 4095.0f * 2.5f * 2;
+						sprintf(response, "%.3f", voltage);
 					break;
 					case VUSB_GET:
+						voltage = (float)adc_dma_buffer[8] / 4095.0f * 2.5f * 11;
+						sprintf(response, "%.3f", voltage);
 					break;
 					case VSYS_GET:
+						voltage = (float)adc_dma_buffer[4] / 4095.0f * 2.5f * 11;
+						sprintf(response, "%.3f", voltage);
 					break;
 					case V5V_GET:
+						voltage = (float)adc_dma_buffer[1] / 4095.0f * 2.5f;
+						sprintf(response, "%.3f", voltage);
 					break;
 					case VMCU_GET:
 					break;
 					case VNEG_GET:
+						voltage = (float)adc_dma_buffer[7] / 4095.0f * 2.5f * 23.32 - (((float)adc_dma_buffer[4] / 4095.0f * 2.5f * 11) * 1.33);
+						sprintf(response, "%.3f", voltage);
 					break;
 					case VPOS_GET:
+						voltage = (float)adc_dma_buffer[0] / 4095.0f * 2.5f * 11;
+						sprintf(response, "%.3f", voltage);
 					break;
 
 					/* --- Current Sensors Getters --- */
 					case IPOS_GET:
+						current = (float)adc_dma_buffer[10] / 4095.0f * 2.5f * 2;
+						sprintf(response, "%.3f", current);
 					break;
 					case INEG_GET:
+						current = (float)adc_dma_buffer[2] / 4095.0f * 2.5f * 1.111;
+						sprintf(response, "%.3f", current);
 					break;
 					case I3V3_GET:
+						current = (float)adc_dma_buffer[3] / 4095.0f * 2.5f * 2;
+						sprintf(response, "%.3f", current);
 					break;
 					case I2V5_GET:
+						current = (float)adc_dma_buffer[9] / 4095.0f * 2.5f * 2;
+						sprintf(response, "%.3f", current);
 					break;
 
 					/* --- Rail Enables --- */
 					case VP_ENABLE:
+						EnableOutput(V_Positive);
+						sprintf(response, "OK");
 					break;
 					case VN_ENABLE:
+						EnableOutput(V_Negative);
+						sprintf(response, "OK");
 					break;
 					case V3_ENABLE:
+						EnableOutput(V_3v3);
+						sprintf(response, "OK");
 					break;
 					case V2_ENABLE:
+						EnableOutput(V_2v5);
+						sprintf(response, "OK");
 					break;
 
 					/* --- Rail Disables --- */
 					case VP_DISABLE:
+						DisableOutput(V_Positive);
+						sprintf(response, "OK");
 					break;
 					case VN_DISABLE:
+						DisableOutput(V_Negative);
+						sprintf(response, "OK");
 					break;
 					case V3_DISABLE:
+						DisableOutput(V_3v3);
+						sprintf(response, "OK");
 					break;
-					case V2_DISABLE: // Note: Matches your typo 'DIABLE'
+					case V2_DISABLE:
+						DisableOutput(V_2v5);
+						sprintf(response, "OK");
 					break;
 
 					/* --- Global Controls --- */
 					case ALL_ENABLE:
+						EnableOutput(V_Positive);
+						EnableOutput(V_Negative);
+						EnableOutput(V_3v3);
+						EnableOutput(V_2v5);
+						sprintf(response, "OK");
 					break;
 					case ALL_DISABLE:
+						DisableOutput(V_Positive);
+						DisableOutput(V_Negative);
+						DisableOutput(V_3v3);
+						DisableOutput(V_2v5);
+						sprintf(response, "OK");
 					break;
 
 					default:
-					// Handle unknown command ID
+						// Handle unknown command ID
+						sprintf(response, "ERR");
 					break;
 			  }
 			  SendResponse(&messageInQueue, response);

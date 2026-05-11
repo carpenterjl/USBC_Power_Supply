@@ -60,6 +60,8 @@ I_ADC SYS_Current_Map[4] =
 		{I_2v5, ADC_CHANNEL_11},
 };
 
+uint16_t adc_dma_buffer[11] = {0};
+
 /**
  * Set the positive supply output voltage, with the max current limit
  * If max current is 0, current limit will be ignored.
@@ -127,9 +129,9 @@ void SetNegativeSupply(float set_voltage, float max_current)
 void DisableAllOutputs(void)
 {
 	HAL_GPIO_WritePin(VP_EN_GPIO_Port, VP_EN_Pin, 0);
-	HAL_GPIO_WritePin(VP_EN_GPIO_Port, VN_EN_Pin, 0);
-	HAL_GPIO_WritePin(VP_EN_GPIO_Port, EN_3V3_EXT_Pin, 1);
-	HAL_GPIO_WritePin(VP_EN_GPIO_Port, EN_2V5_EXT_Pin, 1);
+	HAL_GPIO_WritePin(VN_EN_GPIO_Port, VN_EN_Pin, 0);
+	HAL_GPIO_WritePin(EN_3V3_EXT_GPIO_Port, EN_3V3_EXT_Pin, 1);
+	HAL_GPIO_WritePin(EN_2V5_EXT_GPIO_Port, EN_2V5_EXT_Pin, 1);
 	return;
 }
 
@@ -161,8 +163,6 @@ float ReadCurrent(Current_Sources I_Source)
 /**
  * Read the power output from the supply.
  * Only supplies which have both voltage and current monitoring are supported.
- * Either V_Source or I_Source can be greater than the number of sources.
- * V_Source will be checked first. If greater, I_Source. If greater, return 0.
  */
 float ReadPower(Voltage_Sources V_Source, Current_Sources I_Source)
 {
@@ -250,15 +250,13 @@ uint32_t Read_ADC_Channel(ADC_HandleTypeDef *hadc, uint32_t channel)
 	static uint32_t last_channel = ADC_CHANNEL_1;
     ADC_ChannelConfTypeDef sConfig = {0};
     HAL_ADC_Stop_DMA(hadc);
-    // 1. Clear any previous channel configurations (CRITICAL)
+
     __HAL_ADC_CLEAR_FLAG(hadc, ADC_FLAG_EOC | ADC_FLAG_EOS | ADC_FLAG_OVR);
 
-    // Before configuring the new channel, clear the current Rank 1
     sConfig.Channel = last_channel;
     sConfig.Rank = ADC_REGULAR_RANK_2;
     HAL_ADC_ConfigChannel(hadc, &sConfig);
 
-    // 2. Configure the new target channel
     sConfig.Channel = channel;
     sConfig.Rank = ADC_REGULAR_RANK_1;
     sConfig.SamplingTime = ADC_SAMPLETIME_92CYCLES_5;
@@ -266,36 +264,22 @@ uint32_t Read_ADC_Channel(ADC_HandleTypeDef *hadc, uint32_t channel)
     sConfig.OffsetNumber = ADC_OFFSET_NONE;
     sConfig.Offset = 0;
 
-    // This overrides/rewrites the sequence list
     HAL_ADC_ConfigChannel(hadc, &sConfig);
     last_channel = channel;
-//    HAL_ADC_Start(&hadc1);
-//    if (HAL_ADC_PollForConversion(hadc, 100) == HAL_OK) { // Avoid infinite blocking
-//        uint32_t value = HAL_ADC_GetValue(hadc);
-////        HAL_ADC_Stop(hadc);
-//        return value;
-//    }
 
-//    HAL_ADC_Stop(hadc);
-    return 0; // Return 0 or handle error accordingly
+    return 0;
 }
 
 float Read_Calibrated_Voltage(uint16_t raw_adc_reading)
 {
-    // 1. Grab the factory 12-bit calibration value from ROM
     uint16_t vrefint_cal = *VREFINT_CAL_ADDR;
 
-    // 2. We must measure the internal reference channel live!
-    // G431 internal reference usually sits on ADC1_IN18 or a dedicated macro
     uint32_t vrefint_data = Read_ADC_Channel(&hadc1, ADC_CHANNEL_VREFINT);
 
-    // Guard against a zero reading to avoid division by zero
     if (vrefint_data == 0) return 0.0f;
 
-    // 3. Compute the active reference ceiling (nominally should be ~2.5V)
     float actual_vref = 3.0f * ((float)vrefint_cal / (float)vrefint_data);
 
-    // 4. Calculate your true targeted pin voltage
     float pin_voltage = ((float)raw_adc_reading / 4096.0f) * actual_vref;
 
     return pin_voltage;
@@ -418,14 +402,11 @@ void SendResponse(SerialMsg_t *source_message, char *results)
 {
     char buffer[32];
     if(results == NULL) return;
-
-    //Float Response (add parsing based on command)
-    float fRes = strtof(results, NULL);
-    int len = snprintf(buffer, sizeof(buffer), "%0.2f\n", fRes);
-
+    strcpy(buffer, results);
+    buffer[strlen(buffer)] = '\n';
     if (source_message->requesterTask == SRC_USB)
     {
-    	CDC_Transmit_FS((uint8_t*)buffer, len);
+    	CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer) + 1);
     }
     else if (source_message->requesterTask == SRC_UART)
     {

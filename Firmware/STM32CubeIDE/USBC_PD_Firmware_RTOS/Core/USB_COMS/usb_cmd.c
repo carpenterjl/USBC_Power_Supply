@@ -165,28 +165,35 @@ void set_supply_voltage(char *args)
 	float v_set = strtof(voltage, NULL);
 	if(v_set < -20 || v_set > 20) goto ERROR_SET_VOLTAGE;
 
+	SerialMsg_t message;
+	message.requesterTask = SRC_USB;
+
 	switch(supply[0])
 	{
 	case 'P':
 			if(v_set < 0) goto ERROR_SET_VOLTAGE;
-			SetPositiveSupply(v_set, 0);
+			message.commandID = VPOS_SET;
+			message.value = (int16_t)v_set*1000;
+//			SetPositiveSupply(v_set, 0);
 		break;
 	case 'N':
 			if(v_set > 0) goto ERROR_SET_VOLTAGE;
-			SetNegativeSupply(v_set, 0);
+			message.commandID = VNEG_SET;
+			message.value = (int16_t)v_set*1000;
+//			SetNegativeSupply(v_set, 0);
 		break;
 	default: goto ERRORSUPPLYSET;
 	}
-
-	printf("OK\n");
+	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
+//	printf("OK\n");
 	return;
 
 	ERRORSUPPLYSET:
-	printf("Invalid Supply\n");
+//	printf("Invalid Supply\n");
 	return;
 
 	ERROR_SET_VOLTAGE:
-	printf("Range Error\n");
+//	printf("Range Error\n");
 	return;
 }
 
@@ -195,29 +202,37 @@ void get_supply_voltage(char *args)
 	char *supply = strtok(args, ":");
 	if(!supply) return;
 
-	float v_supp = 0;
+//	float v_supp = 0;
+
+	SerialMsg_t message;
+	message.requesterTask = SRC_USB;
+
 	switch(supply[0])
 	{
 	case 'P':
-		v_supp = ReadVoltage(V_Positive);
+//		v_supp = ReadVoltage(V_Positive);
+		message.commandID = VPOS_GET;
 		break;
 	case 'N':
-		v_supp = ReadVoltage(V_Negative);
+//		v_supp = ReadVoltage(V_Negative);
+		message.commandID = VNEG_GET;
 		break;
 	case '3':
-		v_supp = ReadVoltage(V_3v3);
+//		v_supp = ReadVoltage(V_3v3);
+		message.commandID = V3V3_GET;
 		break;
 	case '2':
-		v_supp = ReadVoltage(V_2v5);
+//		v_supp = ReadVoltage(V_2v5);
+		message.commandID = V2V5_GET;
 	break;
 	default: goto ERRORSUPPLYSET;
 	}
-
-	printf("%.3f\n", v_supp);
+	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
+//	printf("%.3f\n", v_supp);
 	return;
 
 	ERRORSUPPLYSET:
-	printf("Invalid Supply\n");
+//	printf("Invalid Supply\n");
 	return;
 }
 
@@ -225,28 +240,36 @@ void enable_supply(char *args)
 {
 	char *supply = strtok(args, ":");
 	if(!supply) return;
+	SerialMsg_t message;
+	message.requesterTask = SRC_USB;
+
 	switch(supply[0])
 	{
 	case 'P':
-		EnableOutput(V_Positive);
+		message.commandID = VP_ENABLE;
+//		EnableOutput(V_Positive);
 		break;
 	case 'N':
-		EnableOutput(V_Negative);
+		message.commandID = VN_ENABLE;
+//		EnableOutput(V_Negative);
 		break;
 	case '3':
-		EnableOutput(V_3v3);
+		message.commandID = V3_ENABLE;
+//		EnableOutput(V_3v3);
 		break;
 	case '2':
-		EnableOutput(V_2v5);
+		message.commandID = V2_ENABLE;
+//		EnableOutput(V_2v5);
 		break;
 	default: goto ERRORSUPPLYSET;
 	}
+	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
 	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-	printf("OK\n");
+//	printf("OK\n");
 	return;
 
 	ERRORSUPPLYSET:
-	printf("Invalid Supply\n");
+//	printf("Invalid Supply\n");
 	return;
 }
 
@@ -254,28 +277,36 @@ void disable_supply(char *args)
 {
 	char *supply = strtok(args, ":");
 	if(!supply) return;
+	SerialMsg_t message;
+	message.requesterTask = SRC_USB;
+
 	switch(supply[0])
 	{
 	case 'P':
-		DisableOutput(V_Positive);
+		message.commandID = VP_DISABLE;
+//		DisableOutput(V_Positive);
 		break;
 	case 'N':
-		DisableOutput(V_Negative);
+		message.commandID = VN_DISABLE;
+//		DisableOutput(V_Negative);
 		break;
 	case '3':
-		DisableOutput(V_3v3);
+		message.commandID = V3_DISABLE;
+//		DisableOutput(V_3v3);
 		break;
 	case '2':
-		DisableOutput(V_2v5);
+		message.commandID = V2_DISABLE;
+//		DisableOutput(V_2v5);
 		break;
 	default: goto ERRORSUPPLYSET;
 	}
+	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
 	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-	printf("OK\n");
+//	printf("OK\n");
 	return;
 
 	ERRORSUPPLYSET:
-	printf("Invalid Supply\n");
+//	printf("Invalid Supply\n");
 	return;
 }
 extern uint16_t *adc_dma_buf;
@@ -314,8 +345,6 @@ void measurement_mode(char *args)
 	return;
 }
 
-extern USB_PD_SRC_PDOTypeDef PDO_FROM_SRC[USBPORT_MAX][7];
-
 void request_usbc_voltage(char *args)
 {
 	char *request = strtok(args, ":");
@@ -327,33 +356,15 @@ void request_usbc_voltage(char *args)
 	float i_set = strtof(request, NULL);
 	if(i_set > 4) i_set = 4;
 
-	int PDO_V;
-	int PDO_I;
-	float PDO_P;
-
-	Update_PDO(0, 2, (int)v_set*1000,(int)i_set*1000);
-	Update_Valid_PDO_Number(0, 2);
-	Send_Soft_reset_Message(0);
-	Read_SNK_PDO(0);
-
-    PDO_V = (PDO_FROM_SRC[0][1].fix.Voltage)* 50;
-    PDO_I = (PDO_FROM_SRC[0][1].fix.Max_Operating_Current)*10;
-    PDO_P = PDO_V*PDO_I;
-
-	if(PDO_V >= v_set && PDO_I >= i_set)
-	{
-		printf("USBPD:SUCCESS\n");
-	}else
-	{
-		printf("USBPD:FAIL\n");
-	}
+//	Update_PDO(0, 2, (int)v_set*1000,(int)i_set*1000);
+//	Update_Valid_PDO_Number(0, 2);
+//	Send_Soft_reset_Message(0);
 
 	//TODO: Remove responses here (in usb_cmd.c), add message to queue instead for ResponseTask to handle
 	SerialMsg_t message;
-	message.commandID = USB_PD_GET;
-	message.value = 0x00;
 	message.requesterTask = SRC_USB;
-	osMessageQueuePut(serialDataQueueHandle, &message, 0, 0);
-	UNUSED(PDO_P);
+	message.commandID = USB_PD_GET;
+	message.value = (int16_t)v_set*1000;
+	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
 	return;
 }
