@@ -293,13 +293,13 @@ void EnableOutput(Voltage_Sources V_Source)
 		HAL_GPIO_WritePin(VP_EN_GPIO_Port, VP_EN_Pin, 1);
 		break;
 	case V_Negative:
-		HAL_GPIO_WritePin(VP_EN_GPIO_Port, VN_EN_Pin, 1);
+		HAL_GPIO_WritePin(VN_EN_GPIO_Port, VN_EN_Pin, 1);
 		break;
 	case V_3v3:
-		HAL_GPIO_WritePin(VP_EN_GPIO_Port, EN_3V3_EXT_Pin, 0);
+		HAL_GPIO_WritePin(EN_3V3_EXT_GPIO_Port, EN_3V3_EXT_Pin, 0);
 		break;
 	case V_2v5:
-		HAL_GPIO_WritePin(VP_EN_GPIO_Port, EN_2V5_EXT_Pin, 0);
+		HAL_GPIO_WritePin(EN_2V5_EXT_GPIO_Port, EN_2V5_EXT_Pin, 0);
 		break;
 	default: break;
 	}
@@ -314,13 +314,13 @@ void DisableOutput(Voltage_Sources V_Source)
 		HAL_GPIO_WritePin(VP_EN_GPIO_Port, VP_EN_Pin, 0);
 		break;
 	case V_Negative:
-		HAL_GPIO_WritePin(VP_EN_GPIO_Port, VN_EN_Pin, 0);
+		HAL_GPIO_WritePin(VN_EN_GPIO_Port, VN_EN_Pin, 0);
 		break;
 	case V_3v3:
-		HAL_GPIO_WritePin(VP_EN_GPIO_Port, EN_3V3_EXT_Pin, 1);
+		HAL_GPIO_WritePin(EN_3V3_EXT_GPIO_Port, EN_3V3_EXT_Pin, 1);
 		break;
 	case V_2v5:
-		HAL_GPIO_WritePin(VP_EN_GPIO_Port, EN_2V5_EXT_Pin, 1);
+		HAL_GPIO_WritePin(EN_2V5_EXT_GPIO_Port, EN_2V5_EXT_Pin, 1);
 		break;
 	default: break;
 	}

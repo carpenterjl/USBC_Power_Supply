@@ -26,6 +26,7 @@ static const USB_COMMANDS CMD_LIST[] =
 	{ "VDIS",   "P/N/3/2",	"Disable Supply", disable_supply},
 	{ "VMEAS",  "P/N/3/2",	"Data Logging Mode", measurement_mode},
 	{ "USBPD",	"<Voltage (float)>:<Current (float)>", "Request V,I from USBC-PD Host", request_usbc_voltage},
+	{ "IGET",	"P/N/3/2",	"Get supply current", get_supply_current},
 };
 
 #define CMDS_LEN struct_size(CMD_LIST)
@@ -173,13 +174,13 @@ void set_supply_voltage(char *args)
 	case 'P':
 			if(v_set < 0) goto ERROR_SET_VOLTAGE;
 			message.commandID = VPOS_SET;
-			message.value = (int16_t)v_set*1000;
+			message.value = (int16_t)(v_set*1000);
 //			SetPositiveSupply(v_set, 0);
 		break;
 	case 'N':
 			if(v_set > 0) goto ERROR_SET_VOLTAGE;
 			message.commandID = VNEG_SET;
-			message.value = (int16_t)v_set*1000;
+			message.value = (int16_t)(v_set*1000);
 //			SetNegativeSupply(v_set, 0);
 		break;
 	default: goto ERRORSUPPLYSET;
@@ -202,37 +203,38 @@ void get_supply_voltage(char *args)
 	char *supply = strtok(args, ":");
 	if(!supply) return;
 
-//	float v_supp = 0;
-
 	SerialMsg_t message;
 	message.requesterTask = SRC_USB;
 
 	switch(supply[0])
 	{
 	case 'P':
-//		v_supp = ReadVoltage(V_Positive);
 		message.commandID = VPOS_GET;
 		break;
 	case 'N':
-//		v_supp = ReadVoltage(V_Negative);
 		message.commandID = VNEG_GET;
 		break;
 	case '3':
-//		v_supp = ReadVoltage(V_3v3);
 		message.commandID = V3V3_GET;
 		break;
 	case '2':
-//		v_supp = ReadVoltage(V_2v5);
 		message.commandID = V2V5_GET;
+		break;
+	case 'U':
+		message.commandID = VUSB_GET;
+	break;
+	case 'S':
+		message.commandID = VSYS_GET;
+	break;
+	case '5':
+		message.commandID = V5V_GET;
 	break;
 	default: goto ERRORSUPPLYSET;
 	}
 	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
-//	printf("%.3f\n", v_supp);
 	return;
 
 	ERRORSUPPLYSET:
-//	printf("Invalid Supply\n");
 	return;
 }
 
@@ -247,29 +249,23 @@ void enable_supply(char *args)
 	{
 	case 'P':
 		message.commandID = VP_ENABLE;
-//		EnableOutput(V_Positive);
 		break;
 	case 'N':
 		message.commandID = VN_ENABLE;
-//		EnableOutput(V_Negative);
 		break;
 	case '3':
 		message.commandID = V3_ENABLE;
-//		EnableOutput(V_3v3);
 		break;
 	case '2':
 		message.commandID = V2_ENABLE;
-//		EnableOutput(V_2v5);
 		break;
 	default: goto ERRORSUPPLYSET;
 	}
 	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
 	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-//	printf("OK\n");
 	return;
 
 	ERRORSUPPLYSET:
-//	printf("Invalid Supply\n");
 	return;
 }
 
@@ -284,29 +280,23 @@ void disable_supply(char *args)
 	{
 	case 'P':
 		message.commandID = VP_DISABLE;
-//		DisableOutput(V_Positive);
 		break;
 	case 'N':
 		message.commandID = VN_DISABLE;
-//		DisableOutput(V_Negative);
 		break;
 	case '3':
 		message.commandID = V3_DISABLE;
-//		DisableOutput(V_3v3);
 		break;
 	case '2':
 		message.commandID = V2_DISABLE;
-//		DisableOutput(V_2v5);
 		break;
 	default: goto ERRORSUPPLYSET;
 	}
 	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
 	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-//	printf("OK\n");
 	return;
 
 	ERRORSUPPLYSET:
-//	printf("Invalid Supply\n");
 	return;
 }
 extern uint16_t *adc_dma_buf;
@@ -366,5 +356,36 @@ void request_usbc_voltage(char *args)
 	message.commandID = USB_PD_GET;
 	message.value = (int16_t)v_set*1000;
 	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
+	return;
+}
+
+void get_supply_current(char *args)
+{
+	char *supply = strtok(args, ":");
+	if(!supply) return;
+
+	SerialMsg_t message;
+	message.requesterTask = SRC_USB;
+
+	switch(supply[0])
+	{
+	case 'P':
+		message.commandID = IPOS_GET;
+		break;
+	case 'N':
+		message.commandID = INEG_GET;
+		break;
+	case '3':
+		message.commandID = I3V3_GET;
+		break;
+	case '2':
+		message.commandID = I2V5_GET;
+		break;
+	default: goto ERRORSUPPLYSET;
+	}
+	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
+	return;
+
+	ERRORSUPPLYSET:
 	return;
 }

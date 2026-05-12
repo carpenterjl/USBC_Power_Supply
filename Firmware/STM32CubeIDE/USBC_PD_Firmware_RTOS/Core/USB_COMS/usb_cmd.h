@@ -35,6 +35,7 @@ void cmd_error(char *args);
 void cmd_spi_transfer(char *args);
 void set_supply_voltage(char *args);
 void get_supply_voltage(char *args);
+void get_supply_current(char *args);
 void enable_supply(char *args);
 void disable_supply(char *args);
 void measurement_mode(char *args);

@@ -192,7 +192,7 @@ void StartResponseTask(void *argument)
 						sprintf(response, "%.3f", voltage);
 					break;
 					case V5V_GET:
-						voltage = (float)adc_dma_buffer[1] / 4095.0f * 2.5f;
+						voltage = (float)adc_dma_buffer[1] / 4095.0f * 2.5f * 3;
 						sprintf(response, "%.3f", voltage);
 					break;
 					case VMCU_GET:
