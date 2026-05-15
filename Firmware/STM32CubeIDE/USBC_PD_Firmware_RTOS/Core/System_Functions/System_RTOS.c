@@ -7,6 +7,13 @@
 
 #include "System_RTOS.h"
 
+static uint32_t STACK_SIZE_REMAINING[6] = {0};
+extern osThreadId_t mainSystemTaskHandle;
+extern osThreadId_t ledStatusTaskHandle;
+extern osThreadId_t usbCommandTaskHandle;
+extern osThreadId_t vMeasureTaskHandle;
+extern osThreadId_t iMeasureTaskHandle;
+extern osThreadId_t cmdResponseTaskHandle;
 /* USER CODE BEGIN Header_StartDefaultTask */
 /**
   * @brief  Function implementing the mainSystemTask thread.
@@ -42,6 +49,12 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  STACK_SIZE_REMAINING[0] = osThreadGetStackSpace(mainSystemTaskHandle);
+	  STACK_SIZE_REMAINING[1] = osThreadGetStackSpace(ledStatusTaskHandle);
+	  STACK_SIZE_REMAINING[2] = osThreadGetStackSpace(usbCommandTaskHandle);
+	  STACK_SIZE_REMAINING[3] = osThreadGetStackSpace(vMeasureTaskHandle);
+	  STACK_SIZE_REMAINING[4] = osThreadGetStackSpace(iMeasureTaskHandle);
+	  STACK_SIZE_REMAINING[5] = osThreadGetStackSpace(cmdResponseTaskHandle);
     osDelay(1);
   }
 
@@ -105,7 +118,8 @@ void StartvMeasureTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  HAL_GPIO_TogglePin(GPIO6_GPIO_Port, GPIO6_Pin); //Scope 100Hz sync signal
+	  osDelay(5);
   }
   //Terminate task in case of exit of main while loop
   osThreadTerminate(NULL);
@@ -148,143 +162,144 @@ void StartResponseTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  if(osMessageQueueGetCount(serialDataQueueHandle) > 0)
+	  if(osMessageQueueGet(serialDataQueueHandle, &messageInQueue, 0, osWaitForever) == osOK)
 	  {
-		  if(osMessageQueueGet(serialDataQueueHandle, &messageInQueue, 0, 0) == osOK)
+		  switch(messageInQueue.commandID)
 		  {
-			  switch(messageInQueue.commandID)
-			  {
-			  	  	/* --- PD & Voltage Settings --- */
-					case USB_PD_SET:
-						voltage = (float)messageInQueue.value / 1000.0f;
-						Update_PDO(0, 2, voltage*1000, 1000);
-						Send_Soft_reset_Message(0);
-						sprintf(response, "OK");
-					break;
-					case USB_PD_GET:
-					break;
-					case VPOS_SET:
-						voltage = (float)messageInQueue.value / 1000.0f;
-						SetPositiveSupply(voltage, 0);
-						sprintf(response, "OK");
-					break;
-					case VNEG_SET:
-						voltage = (float)messageInQueue.value / 1000.0f;
-						SetNegativeSupply(voltage, 0);
-						sprintf(response, "OK");
-					break;
+				/* --- PD & Voltage Settings --- */
+				case USB_PD_SET:
+					voltage = (float)messageInQueue.value / 1000.0f;
+					Update_PDO(0, 2, voltage*1000, 1000);
+					Send_Soft_reset_Message(0);
+					sprintf(response, "OK");
+				break;
+				case USB_PD_GET:
+				break;
+				case VPOS_SET:
+					voltage = (float)messageInQueue.value / 1000.0f;
+					SetPositiveSupply(voltage, 0);
+					sprintf(response, "OK");
+				break;
+				case VNEG_SET:
+					voltage = (float)messageInQueue.value / 1000.0f;
+					SetNegativeSupply(voltage, 0);
+					sprintf(response, "OK");
+				break;
 
-					/* --- Voltage Rails Getters --- */
-					case V3V3_GET:
-						voltage = (float)adc_dma_buffer[5] / 4095.0f * 2.5f * 2;
-						sprintf(response, "%.3f", voltage);
-					break;
-					case V2V5_GET:
-						voltage = (float)adc_dma_buffer[6] / 4095.0f * 2.5f * 2;
-						sprintf(response, "%.3f", voltage);
-					break;
-					case VUSB_GET:
-						voltage = (float)adc_dma_buffer[8] / 4095.0f * 2.5f * 11;
-						sprintf(response, "%.3f", voltage);
-					break;
-					case VSYS_GET:
-						voltage = (float)adc_dma_buffer[4] / 4095.0f * 2.5f * 11;
-						sprintf(response, "%.3f", voltage);
-					break;
-					case V5V_GET:
-						voltage = (float)adc_dma_buffer[1] / 4095.0f * 2.5f * 3;
-						sprintf(response, "%.3f", voltage);
-					break;
-					case VMCU_GET:
-					break;
-					case VNEG_GET:
-						voltage = (float)adc_dma_buffer[7] / 4095.0f * 2.5f * 23.32 - (((float)adc_dma_buffer[4] / 4095.0f * 2.5f * 11) * 1.33);
-						sprintf(response, "%.3f", voltage);
-					break;
-					case VPOS_GET:
-						voltage = (float)adc_dma_buffer[0] / 4095.0f * 2.5f * 11;
-						sprintf(response, "%.3f", voltage);
-					break;
+				/* --- Voltage Rails Getters --- */
+				case V3V3_GET:
+					voltage = (float)adc_dma_buffer[5] / 4095.0f * 2.5f * 2;
+					sprintf(response, "%.3f", voltage);
+				break;
+				case V2V5_GET:
+					voltage = (float)adc_dma_buffer[6] / 4095.0f * 2.5f * 2;
+					sprintf(response, "%.3f", voltage);
+				break;
+				case VUSB_GET:
+					voltage = (float)adc_dma_buffer[8] / 4095.0f * 2.5f * 11;
+					sprintf(response, "%.3f", voltage);
+				break;
+				case VSYS_GET:
+					voltage = (float)adc_dma_buffer[4] / 4095.0f * 2.5f * 11;
+					sprintf(response, "%.3f", voltage);
+				break;
+				case V5V_GET:
+					voltage = (float)adc_dma_buffer[1] / 4095.0f * 2.5f * 3;
+					sprintf(response, "%.3f", voltage);
+				break;
+				case VMCU_GET:
+				break;
+				case VNEG_GET:
+					voltage = (float)adc_dma_buffer[7] / 4095.0f * 2.5f * 23.32 - (((float)adc_dma_buffer[4] / 4095.0f * 2.5f * 11) * 1.33);
+					sprintf(response, "%.3f", voltage);
+				break;
+				case VPOS_GET:
+					voltage = (float)adc_dma_buffer[0] / 4095.0f * 2.5f * 11;
+					sprintf(response, "%.3f", voltage);
+				break;
 
-					/* --- Current Sensors Getters --- */
-					case IPOS_GET:
-						current = (float)adc_dma_buffer[10] / 4095.0f * 2.5f * 2;
-						sprintf(response, "%.3f", current);
-					break;
-					case INEG_GET:
-						current = (float)adc_dma_buffer[2] / 4095.0f * 2.5f * 1.111;
-						sprintf(response, "%.3f", current);
-					break;
-					case I3V3_GET:
-						current = (float)adc_dma_buffer[3] / 4095.0f * 2.5f * 2;
-						sprintf(response, "%.3f", current);
-					break;
-					case I2V5_GET:
-						current = (float)adc_dma_buffer[9] / 4095.0f * 2.5f * 2;
-						sprintf(response, "%.3f", current);
-					break;
+				/* --- Current Sensors Getters --- */
+				case IPOS_GET:
+					current = (float)adc_dma_buffer[10] / 4095.0f * 2.5f * 2;
+					sprintf(response, "%.3f", current);
+				break;
+				case INEG_GET:
+					current = (float)adc_dma_buffer[2] / 4095.0f * 2.5f * 1.111;
+					sprintf(response, "%.3f", current);
+				break;
+				case I3V3_GET:
+					current = (float)adc_dma_buffer[3] / 4095.0f * 2.5f * 2;
+					sprintf(response, "%.3f", current);
+				break;
+				case I2V5_GET:
+					current = (float)adc_dma_buffer[9] / 4095.0f * 2.5f * 2;
+					sprintf(response, "%.3f", current);
+				break;
 
-					/* --- Rail Enables --- */
-					case VP_ENABLE:
-						EnableOutput(V_Positive);
-						sprintf(response, "OK");
-					break;
-					case VN_ENABLE:
-						EnableOutput(V_Negative);
-						sprintf(response, "OK");
-					break;
-					case V3_ENABLE:
-						EnableOutput(V_3v3);
-						sprintf(response, "OK");
-					break;
-					case V2_ENABLE:
-						EnableOutput(V_2v5);
-						sprintf(response, "OK");
-					break;
+				/* --- Rail Enables --- */
+				case VP_ENABLE:
+					EnableOutput(V_Positive);
+					sprintf(response, "OK");
+				break;
+				case VN_ENABLE:
+					EnableOutput(V_Negative);
+					sprintf(response, "OK");
+				break;
+				case V3_ENABLE:
+					EnableOutput(V_3v3);
+					sprintf(response, "OK");
+				break;
+				case V2_ENABLE:
+					EnableOutput(V_2v5);
+					sprintf(response, "OK");
+				break;
 
-					/* --- Rail Disables --- */
-					case VP_DISABLE:
-						DisableOutput(V_Positive);
-						sprintf(response, "OK");
-					break;
-					case VN_DISABLE:
-						DisableOutput(V_Negative);
-						sprintf(response, "OK");
-					break;
-					case V3_DISABLE:
-						DisableOutput(V_3v3);
-						sprintf(response, "OK");
-					break;
-					case V2_DISABLE:
-						DisableOutput(V_2v5);
-						sprintf(response, "OK");
-					break;
+				/* --- Rail Disables --- */
+				case VP_DISABLE:
+					DisableOutput(V_Positive);
+					sprintf(response, "OK");
+				break;
+				case VN_DISABLE:
+					DisableOutput(V_Negative);
+					sprintf(response, "OK");
+				break;
+				case V3_DISABLE:
+					DisableOutput(V_3v3);
+					sprintf(response, "OK");
+				break;
+				case V2_DISABLE:
+					DisableOutput(V_2v5);
+					sprintf(response, "OK");
+				break;
 
-					/* --- Global Controls --- */
-					case ALL_ENABLE:
-						EnableOutput(V_Positive);
-						EnableOutput(V_Negative);
-						EnableOutput(V_3v3);
-						EnableOutput(V_2v5);
-						sprintf(response, "OK");
+				/* --- Global Controls --- */
+				case ALL_ENABLE:
+					EnableOutput(V_Positive);
+					EnableOutput(V_Negative);
+					EnableOutput(V_3v3);
+					EnableOutput(V_2v5);
+					sprintf(response, "OK");
+				break;
+				case ALL_DISABLE:
+					DisableOutput(V_Positive);
+					DisableOutput(V_Negative);
+					DisableOutput(V_3v3);
+					DisableOutput(V_2v5);
+					sprintf(response, "OK");
+				break;
+				case STACK_SPACE:
+					if(messageInQueue.value < 6 && messageInQueue.value >= 0)
+					{
+						sprintf(response, "%lu", STACK_SIZE_REMAINING[messageInQueue.value]);
+					}
 					break;
-					case ALL_DISABLE:
-						DisableOutput(V_Positive);
-						DisableOutput(V_Negative);
-						DisableOutput(V_3v3);
-						DisableOutput(V_2v5);
-						sprintf(response, "OK");
-					break;
-
-					default:
-						// Handle unknown command ID
-						sprintf(response, "ERR");
-					break;
-			  }
-			  SendResponse(&messageInQueue, response);
+				default:
+					// Handle unknown command ID
+					sprintf(response, "ERR");
+				break;
 		  }
+		  SendResponse(&messageInQueue, response);
 	  }
-    osDelay(1);
   }
   //Terminate task in case of exit of main while loop
   osThreadTerminate(NULL);

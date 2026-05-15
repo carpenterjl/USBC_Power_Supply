@@ -102,10 +102,11 @@ typedef enum
 	V2_DISABLE	=	0x17,
 	ALL_ENABLE	=	0x18,
 	ALL_DISABLE	=	0x19,
+	STACK_SPACE =	0x1A,
 }SYSTEM_COMMANDS_ENUM;
 
 #define LED_PERIOD_HALF (500/portTICK_PERIOD_MS)
-#define USB_RESPONSE_PERIOD (5/portTICK_PERIOD_MS)
+#define USB_RESPONSE_PERIOD (1/portTICK_PERIOD_MS)
 
 #define struct_size(a) (sizeof(a)/sizeof(a[0]))
 #endif /* SYSTEM_FUNCTIONS_SYSTEM_FUNCTIONS_H_ */
