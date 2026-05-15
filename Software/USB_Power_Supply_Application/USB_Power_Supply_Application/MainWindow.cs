@@ -25,6 +25,9 @@ namespace USB_Power_Supply_Application
 
         private DateTime? _lastUpdateTime = null;
 
+        private float _originalFontSize;
+        private int _originalFormHeight;
+
         //TODO: Switch to concurrent queue?
         private readonly Channel<commands_Struct> commandChannel = Channel.CreateUnbounded<commands_Struct>();
 
@@ -48,6 +51,7 @@ namespace USB_Power_Supply_Application
             WriteVP = 15,
             WriteVN = 16,
             IDREQ = 17,
+            GETSTACK = 18,
         }
 
         public struct commands_Struct
@@ -72,6 +76,14 @@ namespace USB_Power_Supply_Application
             dataGridViewMeasurements.Rows.Add("VPOSITIVE", 0, 0);
             dataGridViewMeasurements.Rows.Add("VNEGATIVE", 0, 0);
             dataGridViewMeasurements.EnableHeadersVisualStyles = false;
+            dataGridViewTaskStack.Rows.Clear();
+            dataGridViewTaskStack.Rows.Add("mainSystemTask", "Waiting...");
+            dataGridViewTaskStack.Rows.Add("ledStatusTask", "Waiting...");
+            dataGridViewTaskStack.Rows.Add("usbCommandTask", "Waiting...");
+            dataGridViewTaskStack.Rows.Add("vMeasureTask", "Waiting...");
+            dataGridViewTaskStack.Rows.Add("iMeasureTask", "Waiting...");
+            dataGridViewTaskStack.Rows.Add("cmdResponseTask", "Waiting...");
+            dataGridViewTaskStack.EnableHeadersVisualStyles = false;
             foreach (DataGridViewColumn col in dataGridViewMeasurements.Columns)
             {
                 col.SortMode = DataGridViewColumnSortMode.NotSortable;
@@ -79,6 +91,8 @@ namespace USB_Power_Supply_Application
             timerUpdateVIW.Enabled = true;
             timerUpdateVIW.Start();
             InitializeDebounceTimers();
+            _originalFontSize = dataGridViewTaskStack.DefaultCellStyle.Font.Size;
+            _originalFormHeight = this.Height;
         }
 
         private async void buttonConnect_Click(object sender, EventArgs e)
@@ -136,12 +150,12 @@ namespace USB_Power_Supply_Application
             if (updatingControls)
                 return;
 
-            if(rotaryKnobVP.Value > (float)numericUpDownVPLimHigh.Value)
+            if (rotaryKnobVP.Value > (float)numericUpDownVPLimHigh.Value)
             {
                 rotaryKnobVP.Value = (float)numericUpDownVPLimHigh.Value;
             }
 
-            if(rotaryKnobVP.Value < (float)numericUpDownVPLimLow.Value)
+            if (rotaryKnobVP.Value < (float)numericUpDownVPLimLow.Value)
             {
                 rotaryKnobVP.Value = (float)numericUpDownVPLimLow.Value;
             }
@@ -190,7 +204,7 @@ namespace USB_Power_Supply_Application
 
             if (trackingMode) return;
 
-            if(checkBoxEnableTracking.Checked)
+            if (checkBoxEnableTracking.Checked)
             {
                 trackingMode = true;
                 rotaryKnobVP.Value = -(rotaryKnobVN.Value);
@@ -538,53 +552,74 @@ namespace USB_Power_Supply_Application
             }
         }
 
+
+        private static short task_id = 0;
         private async Task updateMeasurements()
         {
+
             commands_Struct cmd = new commands_Struct();
             if (_usbAdapter != null && _usbAdapter.isDeviceConnected && _powerSupply != null)
             {
-                //Loop to increment all readings and update measurements
-                for (int idx = 0; idx < 11; idx++)
+                if (checkBoxOnlyStack.Checked)
                 {
-                    switch (idx)
-                    {
-                        case 0:
-                            cmd._cmd = PowerCommand.ReadI3v3;
-                            break;
-                        case 1:
-                            cmd._cmd = PowerCommand.ReadI2v5;
-                            break;
-                        case 2:
-                            cmd._cmd = PowerCommand.ReadIPositive;
-                            break;
-                        case 3:
-                            cmd._cmd = PowerCommand.ReadINegative;
-                            break;
-                        case 4:
-                            cmd._cmd = PowerCommand.ReadV5v;
-                            break;
-                        case 5:
-                            cmd._cmd = PowerCommand.ReadVUsb;
-                            break;
-                        case 6:
-                            cmd._cmd = PowerCommand.ReadVSystem;
-                            break;
-                        case 7:
-                            cmd._cmd = PowerCommand.ReadV3v3;
-                            break;
-                        case 8:
-                            cmd._cmd = PowerCommand.ReadV2v5;
-                            break;
-                        case 9:
-                            cmd._cmd = PowerCommand.ReadVPositive;
-                            break;
-                        case 10:
-                            cmd._cmd = PowerCommand.ReadVNegative;
-                            break;
-                        default:
-                            break;
-                    }
+                    cmd._cmd = PowerCommand.GETSTACK;
+                    cmd._value = task_id;
+                    if (task_id < 5) task_id++;
+                    else task_id = 0;
+
                     await commandChannel.Writer.WriteAsync(cmd);
+                }
+                else
+                {
+                    //Loop to increment all readings and update measurements
+                    for (int idx = 0; idx < 12; idx++)
+                    {
+                        switch (idx)
+                        {
+                            case 0:
+                                cmd._cmd = PowerCommand.ReadI3v3;
+                                break;
+                            case 1:
+                                cmd._cmd = PowerCommand.ReadI2v5;
+                                break;
+                            case 2:
+                                cmd._cmd = PowerCommand.ReadIPositive;
+                                break;
+                            case 3:
+                                cmd._cmd = PowerCommand.ReadINegative;
+                                break;
+                            case 4:
+                                cmd._cmd = PowerCommand.ReadV5v;
+                                break;
+                            case 5:
+                                cmd._cmd = PowerCommand.ReadVUsb;
+                                break;
+                            case 6:
+                                cmd._cmd = PowerCommand.ReadVSystem;
+                                break;
+                            case 7:
+                                cmd._cmd = PowerCommand.ReadV3v3;
+                                break;
+                            case 8:
+                                cmd._cmd = PowerCommand.ReadV2v5;
+                                break;
+                            case 9:
+                                cmd._cmd = PowerCommand.ReadVPositive;
+                                break;
+                            case 10:
+                                cmd._cmd = PowerCommand.ReadVNegative;
+                                break;
+                            case 11:
+                                cmd._cmd = PowerCommand.GETSTACK;
+                                cmd._value = task_id;
+                                if (task_id < 5) task_id++;
+                                else task_id = 0;
+                                break;
+                            default:
+                                break;
+                        }
+                        await commandChannel.Writer.WriteAsync(cmd);
+                    }
                 }
             }
         }
@@ -693,6 +728,12 @@ namespace USB_Power_Supply_Application
                             await _powerSupply.SetVoltage(USB_Power_Supply_HW.Voltage_Sources.V_Negative, (float)command._value / 1000.0f);
                             break;
 
+                        /* RTOS Stack for Tasks */
+                        case PowerCommand.GETSTACK:
+                            string stack_space = await _powerSupply.GetStackSpace((uint)command._value);
+                            UpdateStackGrid(command._value, 1, stack_space);
+                            break;
+
                         /* Default = Error in Software */
                         default:
                             MessageBox.Show("Error in command processor, reached default state.", "Software Error!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -708,6 +749,14 @@ namespace USB_Power_Supply_Application
             this.Invoke(() =>
             {
                 dataGridViewMeasurements.Rows[row].Cells[col].Value = value;
+            });
+        }
+
+        private void UpdateStackGrid(int row, int col, string value)
+        {
+            this.Invoke(() =>
+            {
+                dataGridViewTaskStack.Rows[row].Cells[col].Value = value;
             });
         }
 
@@ -850,13 +899,14 @@ namespace USB_Power_Supply_Application
         private void InitializeDebounceTimers()
         {
             _debounceTimerVP = new System.Windows.Forms.Timer { Interval = 150 };
-            _debounceTimerVP.Tick += async (s, e) => {
+            _debounceTimerVP.Tick += async (s, e) =>
+            {
                 _debounceTimerVP.Stop();
                 commands_Struct cmd = new commands_Struct();
                 cmd._cmd = PowerCommand.WriteVP;
                 cmd._value = (Int16)(rotaryKnobVP.Value * 1000);
                 await commandChannel.Writer.WriteAsync(cmd);
-                if(checkBoxEnableTracking.Checked)
+                if (checkBoxEnableTracking.Checked)
                 {
                     cmd._cmd = PowerCommand.WriteVN;
                     cmd._value = (Int16)(rotaryKnobVN.Value * 1000);
@@ -865,19 +915,43 @@ namespace USB_Power_Supply_Application
             };
 
             _debounceTimerVN = new System.Windows.Forms.Timer { Interval = 150 };
-            _debounceTimerVN.Tick += async (s, e) => {
+            _debounceTimerVN.Tick += async (s, e) =>
+            {
                 _debounceTimerVN.Stop();
                 commands_Struct cmd = new commands_Struct();
                 cmd._cmd = PowerCommand.WriteVN;
                 cmd._value = (Int16)(rotaryKnobVN.Value * 1000);
                 await commandChannel.Writer.WriteAsync(cmd);
-                if(checkBoxEnableTracking.Checked)
+                if (checkBoxEnableTracking.Checked)
                 {
                     cmd._cmd = PowerCommand.WriteVP;
                     cmd._value = (Int16)(rotaryKnobVP.Value * 1000);
                     await commandChannel.Writer.WriteAsync(cmd);
                 }
             };
+        }
+
+        private void MainWindow_Resize(object sender, EventArgs e)
+        {
+            if (_originalFormHeight > 0)
+            {
+                float ratio = (float)this.Height / _originalFormHeight;
+                float newSize = _originalFontSize * ratio;
+
+                // Update font for cells and headers
+                if (newSize > 1)
+                {
+                    dataGridViewTaskStack.DefaultCellStyle.Font = new Font(dataGridViewTaskStack.DefaultCellStyle.Font.FontFamily, newSize);
+                    dataGridViewTaskStack.ColumnHeadersDefaultCellStyle.Font = new Font(dataGridViewTaskStack.ColumnHeadersDefaultCellStyle.Font.FontFamily, newSize);
+                    dataGridViewTaskStack.RowsDefaultCellStyle.Font = new Font(dataGridViewTaskStack.ColumnHeadersDefaultCellStyle.Font.FontFamily, newSize);
+                    dataGridViewTaskStack.AlternatingRowsDefaultCellStyle.Font = new Font(dataGridViewTaskStack.ColumnHeadersDefaultCellStyle.Font.FontFamily, newSize);
+
+                    dataGridViewMeasurements.DefaultCellStyle.Font = new Font(dataGridViewMeasurements.DefaultCellStyle.Font.FontFamily, newSize);
+                    dataGridViewMeasurements.ColumnHeadersDefaultCellStyle.Font = new Font(dataGridViewMeasurements.ColumnHeadersDefaultCellStyle.Font.FontFamily, newSize);
+                    dataGridViewMeasurements.RowsDefaultCellStyle.Font = new Font(dataGridViewTaskStack.ColumnHeadersDefaultCellStyle.Font.FontFamily, newSize);
+                    dataGridViewMeasurements.AlternatingRowsDefaultCellStyle.Font = new Font(dataGridViewTaskStack.ColumnHeadersDefaultCellStyle.Font.FontFamily, newSize);
+                }
+            }
         }
     }
 }

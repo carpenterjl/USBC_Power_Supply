@@ -29,12 +29,17 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle10 = new DataGridViewCellStyle();
             buttonConnect = new Button();
             comboBoxPortsList = new ComboBox();
             labelVPositive = new Label();
@@ -56,10 +61,6 @@
             labelI2V5 = new Label();
             labelV2V5 = new Label();
             checkBoxAutoMeasure = new CheckBox();
-            dataGridViewMeasurements = new DataGridView();
-            Source = new DataGridViewTextBoxColumn();
-            Voltage = new DataGridViewTextBoxColumn();
-            Current = new DataGridViewTextBoxColumn();
             buttonRefreshMeasurements = new Button();
             label1 = new Label();
             labelSelectCOMPort = new Label();
@@ -98,16 +99,26 @@
             checkBoxVPAdjustLimits = new CheckBox();
             checkBoxVNAdjustLimits = new CheckBox();
             checkBoxEnableTracking = new CheckBox();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewMeasurements).BeginInit();
+            checkBoxOnlyStack = new CheckBox();
+            tableLayoutPanelGrids = new TableLayoutPanel();
+            dataGridViewMeasurements = new DataGridView();
+            Source = new DataGridViewTextBoxColumn();
+            Voltage = new DataGridViewTextBoxColumn();
+            Current = new DataGridViewTextBoxColumn();
+            dataGridViewTaskStack = new DataGridView();
+            dataGridViewTextBoxColumn1 = new DataGridViewTextBoxColumn();
+            dataGridViewTextBoxColumn2 = new DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)numericUpDownVPLimHigh).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDownVPLimLow).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDownVNLimLow).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDownVNLimHigh).BeginInit();
+            tableLayoutPanelGrids.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewMeasurements).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewTaskStack).BeginInit();
             SuspendLayout();
             // 
             // buttonConnect
             // 
-            buttonConnect.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             buttonConnect.Location = new Point(5, 5);
             buttonConnect.Name = "buttonConnect";
             buttonConnect.Size = new Size(126, 57);
@@ -118,7 +129,6 @@
             // 
             // comboBoxPortsList
             // 
-            comboBoxPortsList.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             comboBoxPortsList.FormattingEnabled = true;
             comboBoxPortsList.Location = new Point(137, 23);
             comboBoxPortsList.Name = "comboBoxPortsList";
@@ -326,10 +336,9 @@
             // 
             // checkBoxAutoMeasure
             // 
-            checkBoxAutoMeasure.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             checkBoxAutoMeasure.AutoSize = true;
             checkBoxAutoMeasure.ForeColor = Color.Snow;
-            checkBoxAutoMeasure.Location = new Point(639, 367);
+            checkBoxAutoMeasure.Location = new Point(1269, 78);
             checkBoxAutoMeasure.Name = "checkBoxAutoMeasure";
             checkBoxAutoMeasure.Size = new Size(176, 19);
             checkBoxAutoMeasure.TabIndex = 26;
@@ -337,78 +346,9 @@
             checkBoxAutoMeasure.UseVisualStyleBackColor = true;
             checkBoxAutoMeasure.CheckedChanged += checkBoxAutoMeasure_CheckedChanged;
             // 
-            // dataGridViewMeasurements
-            // 
-            dataGridViewMeasurements.AllowUserToAddRows = false;
-            dataGridViewMeasurements.AllowUserToDeleteRows = false;
-            dataGridViewMeasurements.AllowUserToResizeColumns = false;
-            dataGridViewMeasurements.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.BackColor = Color.PaleGreen;
-            dataGridViewCellStyle1.SelectionBackColor = Color.MediumSeaGreen;
-            dataGridViewCellStyle1.SelectionForeColor = SystemColors.ControlText;
-            dataGridViewMeasurements.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
-            dataGridViewMeasurements.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            dataGridViewMeasurements.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewMeasurements.BackgroundColor = Color.FromArgb(71, 74, 82);
-            dataGridViewMeasurements.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.FromArgb(71, 74, 82);
-            dataGridViewCellStyle2.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            dataGridViewCellStyle2.ForeColor = Color.Snow;
-            dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(71, 74, 82);
-            dataGridViewCellStyle2.SelectionForeColor = Color.Snow;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
-            dataGridViewMeasurements.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
-            dataGridViewMeasurements.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewMeasurements.Columns.AddRange(new DataGridViewColumn[] { Source, Voltage, Current });
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.MediumAquamarine;
-            dataGridViewCellStyle3.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            dataGridViewCellStyle3.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle3.SelectionBackColor = Color.MediumSeaGreen;
-            dataGridViewCellStyle3.SelectionForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            dataGridViewMeasurements.DefaultCellStyle = dataGridViewCellStyle3;
-            dataGridViewMeasurements.Location = new Point(639, 392);
-            dataGridViewMeasurements.Name = "dataGridViewMeasurements";
-            dataGridViewMeasurements.ReadOnly = true;
-            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = SystemColors.Control;
-            dataGridViewCellStyle4.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            dataGridViewCellStyle4.ForeColor = SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.True;
-            dataGridViewMeasurements.RowHeadersDefaultCellStyle = dataGridViewCellStyle4;
-            dataGridViewMeasurements.RowHeadersVisible = false;
-            dataGridViewCellStyle5.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            dataGridViewMeasurements.RowsDefaultCellStyle = dataGridViewCellStyle5;
-            dataGridViewMeasurements.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridViewMeasurements.Size = new Size(589, 281);
-            dataGridViewMeasurements.TabIndex = 27;
-            // 
-            // Source
-            // 
-            Source.HeaderText = "Source";
-            Source.Name = "Source";
-            Source.ReadOnly = true;
-            // 
-            // Voltage
-            // 
-            Voltage.HeaderText = "Voltage";
-            Voltage.Name = "Voltage";
-            Voltage.ReadOnly = true;
-            // 
-            // Current
-            // 
-            Current.HeaderText = "Current";
-            Current.Name = "Current";
-            Current.ReadOnly = true;
-            // 
             // buttonRefreshMeasurements
             // 
-            buttonRefreshMeasurements.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonRefreshMeasurements.Location = new Point(836, 367);
+            buttonRefreshMeasurements.Location = new Point(1466, 78);
             buttonRefreshMeasurements.Name = "buttonRefreshMeasurements";
             buttonRefreshMeasurements.Size = new Size(192, 23);
             buttonRefreshMeasurements.TabIndex = 28;
@@ -424,7 +364,7 @@
             label1.ForeColor = Color.Snow;
             label1.Location = new Point(0, 0);
             label1.Name = "label1";
-            label1.Size = new Size(1240, 66);
+            label1.Size = new Size(1827, 66);
             label1.TabIndex = 29;
             label1.Text = "USBC Power Supply V1.0";
             label1.TextAlign = ContentAlignment.MiddleCenter;
@@ -861,12 +801,172 @@
             checkBoxEnableTracking.Text = "Enable Tracking";
             checkBoxEnableTracking.UseVisualStyleBackColor = true;
             // 
+            // checkBoxOnlyStack
+            // 
+            checkBoxOnlyStack.AutoSize = true;
+            checkBoxOnlyStack.ForeColor = Color.Snow;
+            checkBoxOnlyStack.Location = new Point(1664, 78);
+            checkBoxOnlyStack.Name = "checkBoxOnlyStack";
+            checkBoxOnlyStack.Size = new Size(115, 19);
+            checkBoxOnlyStack.TabIndex = 68;
+            checkBoxOnlyStack.Text = "Only check stack";
+            checkBoxOnlyStack.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanelGrids
+            // 
+            tableLayoutPanelGrids.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            tableLayoutPanelGrids.ColumnCount = 1;
+            tableLayoutPanelGrids.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanelGrids.Controls.Add(dataGridViewMeasurements, 0, 1);
+            tableLayoutPanelGrids.Controls.Add(dataGridViewTaskStack, 0, 0);
+            tableLayoutPanelGrids.Location = new Point(1269, 103);
+            tableLayoutPanelGrids.Name = "tableLayoutPanelGrids";
+            tableLayoutPanelGrids.RowCount = 2;
+            tableLayoutPanelGrids.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelGrids.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelGrids.Size = new Size(558, 580);
+            tableLayoutPanelGrids.TabIndex = 69;
+            // 
+            // dataGridViewMeasurements
+            // 
+            dataGridViewMeasurements.AllowUserToAddRows = false;
+            dataGridViewMeasurements.AllowUserToDeleteRows = false;
+            dataGridViewMeasurements.AllowUserToResizeColumns = false;
+            dataGridViewMeasurements.AllowUserToResizeRows = false;
+            dataGridViewCellStyle1.BackColor = Color.PaleGreen;
+            dataGridViewCellStyle1.SelectionBackColor = Color.MediumSeaGreen;
+            dataGridViewCellStyle1.SelectionForeColor = SystemColors.ControlText;
+            dataGridViewMeasurements.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewMeasurements.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewMeasurements.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+            dataGridViewMeasurements.BackgroundColor = Color.FromArgb(71, 74, 82);
+            dataGridViewMeasurements.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.FromArgb(71, 74, 82);
+            dataGridViewCellStyle2.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            dataGridViewCellStyle2.ForeColor = Color.Snow;
+            dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(71, 74, 82);
+            dataGridViewCellStyle2.SelectionForeColor = Color.Snow;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            dataGridViewMeasurements.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewMeasurements.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewMeasurements.Columns.AddRange(new DataGridViewColumn[] { Source, Voltage, Current });
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.MediumAquamarine;
+            dataGridViewCellStyle3.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            dataGridViewCellStyle3.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle3.SelectionBackColor = Color.MediumSeaGreen;
+            dataGridViewCellStyle3.SelectionForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            dataGridViewMeasurements.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewMeasurements.Dock = DockStyle.Fill;
+            dataGridViewMeasurements.Location = new Point(3, 293);
+            dataGridViewMeasurements.Name = "dataGridViewMeasurements";
+            dataGridViewMeasurements.ReadOnly = true;
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = SystemColors.Control;
+            dataGridViewCellStyle4.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            dataGridViewCellStyle4.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.True;
+            dataGridViewMeasurements.RowHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewMeasurements.RowHeadersVisible = false;
+            dataGridViewCellStyle5.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            dataGridViewMeasurements.RowsDefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewMeasurements.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dataGridViewMeasurements.Size = new Size(552, 284);
+            dataGridViewMeasurements.TabIndex = 69;
+            // 
+            // Source
+            // 
+            Source.HeaderText = "Source";
+            Source.Name = "Source";
+            Source.ReadOnly = true;
+            // 
+            // Voltage
+            // 
+            Voltage.HeaderText = "Voltage";
+            Voltage.Name = "Voltage";
+            Voltage.ReadOnly = true;
+            // 
+            // Current
+            // 
+            Current.HeaderText = "Current";
+            Current.Name = "Current";
+            Current.ReadOnly = true;
+            // 
+            // dataGridViewTaskStack
+            // 
+            dataGridViewTaskStack.AllowUserToAddRows = false;
+            dataGridViewTaskStack.AllowUserToDeleteRows = false;
+            dataGridViewTaskStack.AllowUserToResizeColumns = false;
+            dataGridViewTaskStack.AllowUserToResizeRows = false;
+            dataGridViewCellStyle6.BackColor = Color.PaleGreen;
+            dataGridViewCellStyle6.SelectionBackColor = Color.MediumSeaGreen;
+            dataGridViewCellStyle6.SelectionForeColor = SystemColors.ControlText;
+            dataGridViewTaskStack.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewTaskStack.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewTaskStack.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+            dataGridViewTaskStack.BackgroundColor = Color.FromArgb(71, 74, 82);
+            dataGridViewTaskStack.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dataGridViewCellStyle7.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle7.BackColor = Color.FromArgb(71, 74, 82);
+            dataGridViewCellStyle7.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            dataGridViewCellStyle7.ForeColor = Color.Snow;
+            dataGridViewCellStyle7.SelectionBackColor = Color.FromArgb(71, 74, 82);
+            dataGridViewCellStyle7.SelectionForeColor = Color.Snow;
+            dataGridViewCellStyle7.WrapMode = DataGridViewTriState.True;
+            dataGridViewTaskStack.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewTaskStack.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewTaskStack.Columns.AddRange(new DataGridViewColumn[] { dataGridViewTextBoxColumn1, dataGridViewTextBoxColumn2 });
+            dataGridViewCellStyle8.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle8.BackColor = Color.MediumAquamarine;
+            dataGridViewCellStyle8.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            dataGridViewCellStyle8.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle8.SelectionBackColor = Color.MediumSeaGreen;
+            dataGridViewCellStyle8.SelectionForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle8.WrapMode = DataGridViewTriState.False;
+            dataGridViewTaskStack.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewTaskStack.Dock = DockStyle.Fill;
+            dataGridViewTaskStack.Location = new Point(3, 3);
+            dataGridViewTaskStack.Name = "dataGridViewTaskStack";
+            dataGridViewTaskStack.ReadOnly = true;
+            dataGridViewCellStyle9.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle9.BackColor = SystemColors.Control;
+            dataGridViewCellStyle9.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            dataGridViewCellStyle9.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle9.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle9.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle9.WrapMode = DataGridViewTriState.True;
+            dataGridViewTaskStack.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewTaskStack.RowHeadersVisible = false;
+            dataGridViewCellStyle10.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            dataGridViewTaskStack.RowsDefaultCellStyle = dataGridViewCellStyle10;
+            dataGridViewTaskStack.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dataGridViewTaskStack.Size = new Size(552, 284);
+            dataGridViewTaskStack.TabIndex = 68;
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            dataGridViewTextBoxColumn1.HeaderText = "Task";
+            dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            dataGridViewTextBoxColumn1.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn2
+            // 
+            dataGridViewTextBoxColumn2.HeaderText = "Stack Remaining (Bytes)";
+            dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            dataGridViewTextBoxColumn2.ReadOnly = true;
+            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(47, 49, 54);
-            ClientSize = new Size(1240, 685);
+            ClientSize = new Size(1827, 685);
+            Controls.Add(tableLayoutPanelGrids);
+            Controls.Add(checkBoxOnlyStack);
             Controls.Add(checkBoxEnableTracking);
             Controls.Add(checkBoxVNAdjustLimits);
             Controls.Add(checkBoxVPAdjustLimits);
@@ -902,7 +1002,6 @@
             Controls.Add(rotaryKnobVP);
             Controls.Add(labelSelectCOMPort);
             Controls.Add(buttonRefreshMeasurements);
-            Controls.Add(dataGridViewMeasurements);
             Controls.Add(checkBoxAutoMeasure);
             Controls.Add(labelW2V5);
             Controls.Add(labelI2V5);
@@ -925,15 +1024,18 @@
             Controls.Add(comboBoxPortsList);
             Controls.Add(buttonConnect);
             Controls.Add(label1);
-            MinimumSize = new Size(1256, 724);
+            MinimumSize = new Size(1843, 724);
             Name = "MainWindow";
             Text = "USB Power Supply Control Application";
             Shown += MainWindow_Shown;
-            ((System.ComponentModel.ISupportInitialize)dataGridViewMeasurements).EndInit();
+            Resize += MainWindow_Resize;
             ((System.ComponentModel.ISupportInitialize)numericUpDownVPLimHigh).EndInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDownVPLimLow).EndInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDownVNLimLow).EndInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDownVNLimHigh).EndInit();
+            tableLayoutPanelGrids.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dataGridViewMeasurements).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewTaskStack).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -961,10 +1063,6 @@
         private Label labelI2V5;
         private Label labelV2V5;
         private CheckBox checkBoxAutoMeasure;
-        private DataGridView dataGridViewMeasurements;
-        private DataGridViewTextBoxColumn Source;
-        private DataGridViewTextBoxColumn Voltage;
-        private DataGridViewTextBoxColumn Current;
         private Button buttonRefreshMeasurements;
         private Label label1;
         private Label labelSelectCOMPort;
@@ -1003,5 +1101,14 @@
         private CheckBox checkBoxVPAdjustLimits;
         private CheckBox checkBoxVNAdjustLimits;
         private CheckBox checkBoxEnableTracking;
+        private CheckBox checkBoxOnlyStack;
+        private TableLayoutPanel tableLayoutPanelGrids;
+        private DataGridView dataGridViewMeasurements;
+        private DataGridViewTextBoxColumn Source;
+        private DataGridViewTextBoxColumn Voltage;
+        private DataGridViewTextBoxColumn Current;
+        private DataGridView dataGridViewTaskStack;
+        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
     }
 }

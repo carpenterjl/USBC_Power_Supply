@@ -203,5 +203,16 @@ namespace USB_Power_Supply_Application.Hardware_Interface
             }
             return response;
         }
+
+        public async Task<string> GetStackSpace(uint TaskID)
+        {
+            string response = "ERR";
+            string command = $"STACK:{TaskID}:";
+            if (_usbAdapter != null && _usbAdapter.isDeviceConnected)
+            {
+                response = await _usbAdapter.SendRawAsync(command);
+            }
+            return response;
+        }
     }
 }
