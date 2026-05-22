@@ -62,42 +62,48 @@ osThreadId_t mainSystemTaskHandle;
 const osThreadAttr_t mainSystemTask_attributes = {
   .name = "mainSystemTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
+//  .stack_size = 128 * 4
+  .stack_size = 280
 };
 /* Definitions for ledStatusTask */
 osThreadId_t ledStatusTaskHandle;
 const osThreadAttr_t ledStatusTask_attributes = {
   .name = "ledStatusTask",
   .priority = (osPriority_t) osPriorityBelowNormal6,
-  .stack_size = 128 * 4
+//  .stack_size = 128 * 4
+  .stack_size = 224
 };
 /* Definitions for usbCommandTask */
 osThreadId_t usbCommandTaskHandle;
 const osThreadAttr_t usbCommandTask_attributes = {
   .name = "usbCommandTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 512 * 4
+//  .stack_size = 512 * 4
+  .stack_size = 1432
 };
 /* Definitions for vMeasureTask */
 osThreadId_t vMeasureTaskHandle;
 const osThreadAttr_t vMeasureTask_attributes = {
   .name = "vMeasureTask",
   .priority = (osPriority_t) osPriorityBelowNormal7,
-  .stack_size = 128 * 4
+//  .stack_size = 128 * 4
+  .stack_size = 192
 };
 /* Definitions for iMeasureTask */
 osThreadId_t iMeasureTaskHandle;
 const osThreadAttr_t iMeasureTask_attributes = {
   .name = "iMeasureTask",
   .priority = (osPriority_t) osPriorityBelowNormal7,
-  .stack_size = 128 * 4
+//  .stack_size = 128 * 4
+  .stack_size = 192
 };
 /* Definitions for cmdResponseTask */
 osThreadId_t cmdResponseTaskHandle;
 const osThreadAttr_t cmdResponseTask_attributes = {
   .name = "cmdResponseTask",
   .priority = (osPriority_t) osPriorityNormal1,
-  .stack_size = 512 * 4
+//  .stack_size = 512 * 4
+  .stack_size = 1520
 };
 /* Definitions for serialDataQueue */
 osMessageQueueId_t serialDataQueueHandle;
@@ -795,15 +801,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIO5_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : RESET_PD_Pin SPI_SS_EXT_Pin LED3_Pin LED2_Pin */
-  GPIO_InitStruct.Pin = RESET_PD_Pin|SPI_SS_EXT_Pin|LED3_Pin|LED2_Pin;
+  /*Configure GPIO pins : RESET_PD_Pin SPI_SS_EXT_Pin LED3_Pin LED2_Pin GPIO6_Pin */
+  GPIO_InitStruct.Pin = RESET_PD_Pin|SPI_SS_EXT_Pin|LED3_Pin|LED2_Pin|GPIO6_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO3_Pin NDAC_RDY_Pin GPIO6_Pin GPIO4_Pin */
-  GPIO_InitStruct.Pin = GPIO3_Pin|NDAC_RDY_Pin|GPIO6_Pin|GPIO4_Pin;
+  /*Configure GPIO pins : GPIO3_Pin NDAC_RDY_Pin GPIO4_Pin */
+  GPIO_InitStruct.Pin = GPIO3_Pin|NDAC_RDY_Pin|GPIO4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);

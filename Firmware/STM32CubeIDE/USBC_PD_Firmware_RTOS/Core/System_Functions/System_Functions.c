@@ -76,7 +76,8 @@ void SetPositiveSupply(float set_voltage, float max_current)
 	uint8_t dac_addr_7bit = 0x58;
 	uint8_t dac_data[2] = {0};
 	float R_VAL = ( 59600.0f / (set_voltage - 0.596f) ) - 3300.0f;
-	if(R_VAL >= 50000) R_VAL = 50000.0f * 255.0/256.0;
+	if(R_VAL > 50000) R_VAL = 50000.0f;
+	if(R_VAL < 0) R_VAL = 0;
 	uint8_t R_DAC = (uint8_t)(( R_VAL / 50000.0f ) * 255);
 //	//TODO: Limit R_DAC based on system voltage. Temporarily set for 9V Limit
 //	if(R_DAC < 20) R_DAC = 20;
@@ -100,7 +101,8 @@ void SetNegativeSupply(float set_voltage, float max_current)
 	//PCB Circuit -> R_DAC Code from set_voltage
 	//Max Current -> TODO:Update system struct for monitoring
 	float R_VAL = fabs(set_voltage)*2640 - 3800;
-	if(R_VAL >= 50000) R_VAL = 50000.0f * 1023.0/1024.0;
+	if(R_VAL > 50000) R_VAL = 50000.0f;
+	if(R_VAL < 0) R_VAL = 0;
 	uint16_t R_DAC = (uint16_t)(( R_VAL / 50000 ) * 1023);
 
 	// 1. UNLOCK the wiper
@@ -110,7 +112,7 @@ void SetNegativeSupply(float set_voltage, float max_current)
 	HAL_GPIO_WritePin(NDAC_SYNC_L_GPIO_Port, NDAC_SYNC_L_Pin, 1);
 
 	// 1. Set the wiper value
-	uint16_t wiper_val = (1 << 10) | (R_DAC);
+	uint16_t wiper_val = (1 << 10) | (R_DAC & 0x03FF);
 	HAL_GPIO_WritePin(NDAC_SYNC_L_GPIO_Port, NDAC_SYNC_L_Pin, 0);
 	HAL_SPI_Transmit(&hspi3, (uint8_t*)&wiper_val, 1, 10);
 	HAL_GPIO_WritePin(NDAC_SYNC_L_GPIO_Port, NDAC_SYNC_L_Pin, 1);

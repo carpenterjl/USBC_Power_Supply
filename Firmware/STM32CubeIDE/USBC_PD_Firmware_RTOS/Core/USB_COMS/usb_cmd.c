@@ -27,6 +27,7 @@ static const USB_COMMANDS CMD_LIST[] =
 	{ "VMEAS",  "P/N/3/2",	"Data Logging Mode", measurement_mode},
 	{ "USBPD",	"<Voltage (float)>:<Current (float)>", "Request V,I from USBC-PD Host", request_usbc_voltage},
 	{ "IGET",	"P/N/3/2",	"Get supply current", get_supply_current},
+	{ "STACK",	"[0-5]",	"Return stack space remaining in bytes for task N.", check_stack},
 };
 
 #define CMDS_LEN struct_size(CMD_LIST)
@@ -387,5 +388,21 @@ void get_supply_current(char *args)
 	return;
 
 	ERRORSUPPLYSET:
+	return;
+}
+
+void check_stack(char *args)
+{
+	char *task = strtok(args, ":");
+	if(!task) return;
+
+	uint8_t task_id = task[0] - '0';
+	if(task_id > 5) return;
+
+	SerialMsg_t message;
+	message.requesterTask = SRC_USB;
+	message.commandID = STACK_SPACE;
+	message.value = task_id;
+	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
 	return;
 }
