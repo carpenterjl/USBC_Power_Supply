@@ -40,6 +40,9 @@ namespace Power_Supply_Control_WPF
         public IAsyncRelayCommand SetNegativeSupply { get; }
 
         public IAsyncRelayCommand SaveVP { get; }
+        public IAsyncRelayCommand SaveVN { get; }
+        public IAsyncRelayCommand SaveV3 { get; }
+        public IAsyncRelayCommand SaveV2 { get; }
 
         public IAsyncRelayCommand GetUpdate {  get; }
 
@@ -49,6 +52,9 @@ namespace Power_Supply_Control_WPF
         public IAsyncRelayCommand ClearGraph2V5 { get; }
 
         public IAsyncRelayCommand PopOutGraphPositive { get; }
+        public IAsyncRelayCommand PopOutGraphNegative { get; }
+        public IAsyncRelayCommand PopOutGraph3V3 { get; }
+        public IAsyncRelayCommand PopOutGraph2V5 { get; }
 
         public MeasurementRow SYSTEM;
         public MeasurementRow USB;
@@ -59,6 +65,8 @@ namespace Power_Supply_Control_WPF
         public MeasurementRow VN;
 
         System.Windows.Threading.DispatcherTimer timerAutoUpdate = new() { Interval = TimeSpan.FromMilliseconds(100) };
+
+        private Power_Supply_Control_WPF.Services.AxisManager axisManager = new();
 
         public PSViewModel(PowerSupplyService powerSupplyService)
         {
@@ -71,12 +79,18 @@ namespace Power_Supply_Control_WPF
             SetPositiveSupply = new AsyncRelayCommand(SetVP);
             SetNegativeSupply = new AsyncRelayCommand(SetVN);
             SaveVP = new AsyncRelayCommand(SaveVPFile);
+            SaveVN = new AsyncRelayCommand(SaveVNFile);
+            SaveV3 = new AsyncRelayCommand(SaveV3File);
+            SaveV2 = new AsyncRelayCommand(SaveV2File);
             GetUpdate = new AsyncRelayCommand(UpdateMeasurements);
             ClearGraphPositive = new AsyncRelayCommand(ClearGraphP);
             ClearGraphNegative = new AsyncRelayCommand(ClearGraphN);
             ClearGraph3V3 = new AsyncRelayCommand(ClearGraph3);
             ClearGraph2V5 = new AsyncRelayCommand(ClearGraph2);
             PopOutGraphPositive = new AsyncRelayCommand(PopOutGraphP);
+            PopOutGraphNegative = new AsyncRelayCommand(PopOutGraphN);
+            PopOutGraph3V3 = new AsyncRelayCommand(PopOutGraph3);
+            PopOutGraph2V5 = new AsyncRelayCommand(PopOutGraph2);
 
             plotPositive = CreatePlot("Positive Supply");
             plotNegative = CreatePlot("Negative Supply");
@@ -436,18 +450,26 @@ namespace Power_Supply_Control_WPF
             }
         }
 
+        private bool _isUpdating = false;
+        static DateTime startMeasTime = DateTime.MinValue;
         private async Task UpdateMeasurements()
         {
             if (deviceCOMPort == null) return;
 
+            if (_isUpdating) return;
+
             if (deviceConnected == true)
             {
+                _isUpdating = true;
+                if(startMeasTime == DateTime.MinValue) startMeasTime = DateTime.Now;
                 float vp = (float)await _powerSupplyService.ReadVPVoltage();
                 float ip = (float)await _powerSupplyService.ReadCurrent(USB_Power_Supply_Application.Hardware_Interface.USB_Power_Supply_HW.Current_Sources.I_Positive);
                 float pp = vp * ip;
                 MeasurementSample sp = new() { Timestamp = DateTime.Now, Voltage = vp, Current = ip, Power = pp, };
                 dataSourcePositiveSupply.Add(sp);
                 double t = sp.Timestamp.ToOADate();
+                TimeSpan duration = DateTime.Now - startMeasTime;
+                t = duration.TotalMilliseconds;
                 plotPositive.Traces[0].AddPoint(t, vp);
                 plotPositive.Traces[1].AddPoint(t, ip);
                 plotPositive.Traces[2].AddPoint(t, pp);
@@ -459,6 +481,8 @@ namespace Power_Supply_Control_WPF
                 float pn = vn * ineg;
                 MeasurementSample sn = new() { Timestamp = DateTime.Now, Voltage = vn, Current = ineg, Power = pn };
                 dataSourceNegativeSupply.Add(sn);
+                duration = DateTime.Now - startMeasTime;
+                t = duration.TotalMilliseconds;
                 plotNegative.Traces[0].AddPoint(t, vn);
                 plotNegative.Traces[1].AddPoint(t, ineg);
                 plotNegative.Traces[2].AddPoint(t, pn);
@@ -470,6 +494,8 @@ namespace Power_Supply_Control_WPF
                 float p3 = v3 * i3;
                 MeasurementSample s3 = new() { Timestamp = DateTime.Now, Voltage = v3, Current = i3, Power = p3 };
                 dataSource3V3Supply.Add(s3);
+                duration = DateTime.Now - startMeasTime;
+                t = duration.TotalMilliseconds;
                 plot3V3.Traces[0].AddPoint(t, v3);
                 plot3V3.Traces[1].AddPoint(t, i3);
                 plot3V3.Traces[2].AddPoint(t, p3);
@@ -481,11 +507,14 @@ namespace Power_Supply_Control_WPF
                 float p2 = v2 * i2;
                 MeasurementSample s2 = new() { Timestamp = DateTime.Now, Voltage = v2, Current = i2, Power = p2 };
                 dataSource2V5Supply.Add(s2);
+                duration = DateTime.Now - startMeasTime;
+                t = duration.TotalMilliseconds;
                 plot2V5.Traces[0].AddPoint(t, v2);
                 plot2V5.Traces[1].AddPoint(t, i2);
                 plot2V5.Traces[2].AddPoint(t, p2);
                 V25.Voltage = v2;
                 V25.Current = i2;
+                _isUpdating = false;
             }
         }
 
@@ -517,17 +546,17 @@ namespace Power_Supply_Control_WPF
             return p;
         }
 
-        public async Task SaveAllCSV(string filename)
+        public async Task SaveAllCSV(string filename, PlotSource plot)
         {
             await using StreamWriter sw = new(filename, false);
 
-            await sw.WriteLineAsync("Time," + "VP_V,VP_I,VP_P,");
+            await sw.WriteLineAsync("Milliseconds," + "Volts,Amps,Watts,");
 
-            var vpV = plotPositive.VoltageTrace.Logger!.Data.Coordinates;
+            var vpV = plot.VoltageTrace.Logger!.Data.Coordinates;
 
-            var vpI = plotPositive.CurrentTrace.Logger!.Data.Coordinates;
+            var vpI = plot.CurrentTrace.Logger!.Data.Coordinates;
 
-            var vpP = plotPositive.PowerTrace.Logger!.Data.Coordinates;
+            var vpP = plot.PowerTrace.Logger!.Data.Coordinates;
 
             int count = vpV.Count;
 
@@ -552,7 +581,61 @@ namespace Power_Supply_Control_WPF
             if (result != true)
                 return;
 
-            await SaveAllCSV(dlg.FileName);
+            await SaveAllCSV(dlg.FileName, plotPositive);
+        }
+
+        public async Task SaveVNFile()
+        {
+            SaveFileDialog dlg = new();
+
+            dlg.Filter = "CSV Files (*.csv)|*.csv";
+
+            dlg.DefaultExt = ".csv";
+
+            dlg.FileName = $"Negative_Supply_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+            bool? result = dlg.ShowDialog();
+
+            if (result != true)
+                return;
+
+            await SaveAllCSV(dlg.FileName, plotNegative);
+        }
+
+        public async Task SaveV3File()
+        {
+            SaveFileDialog dlg = new();
+
+            dlg.Filter = "CSV Files (*.csv)|*.csv";
+
+            dlg.DefaultExt = ".csv";
+
+            dlg.FileName = $"3V3_Supply_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+            bool? result = dlg.ShowDialog();
+
+            if (result != true)
+                return;
+
+            await SaveAllCSV(dlg.FileName, plot3V3);
+        }
+
+        public async Task SaveV2File()
+        {
+            SaveFileDialog dlg = new();
+
+            dlg.Filter = "CSV Files (*.csv)|*.csv";
+
+            dlg.DefaultExt = ".csv";
+
+            dlg.FileName = $"2V5_Supply_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+            bool? result = dlg.ShowDialog();
+
+            if (result != true)
+                return;
+
+            await SaveAllCSV(dlg.FileName, plot2V5);
         }
 
         private Task ClearGraphP()
@@ -588,21 +671,30 @@ namespace Power_Supply_Control_WPF
         }
 
         System.Windows.Threading.DispatcherTimer timerUpdateWindow = new() { Interval = TimeSpan.FromMilliseconds(300) };
+        System.Windows.Threading.DispatcherTimer timerUpdateWindowN = new() { Interval = TimeSpan.FromMilliseconds(300) };
+        System.Windows.Threading.DispatcherTimer timerUpdateWindow3 = new() { Interval = TimeSpan.FromMilliseconds(300) };
+        System.Windows.Threading.DispatcherTimer timerUpdateWindow2 = new() { Interval = TimeSpan.FromMilliseconds(300) };
 
         private Task PopOutGraphP()
         {
             Window window = new Window();
             ScottPlot.WPF.WpfPlot myPlot = new();
-            foreach(PlotTrace signal in plotPositive.Traces)
+            var adjAxis = myPlot.Plot.Axes.GetYAxes();
+            adjAxis.First().IsVisible = false;
+            foreach (PlotTrace signal in plotPositive.Traces)
             {
                 DataLogger logger = myPlot.Plot.Add.DataLogger();
                 var axisY = myPlot.Plot.Axes.AddLeftAxis();
                 axisY.LabelText = signal.Name;
+                axisY.LabelText = signal.Name;
                 axisY.IsVisible = signal.Visible;
-                logger.ManageAxisLimits = false;
+                logger.IsVisible = signal.Visible;
                 logger.Axes.YAxis = axisY;
                 logger.LegendText = signal.Name;
-                logger.ViewSlide(50);
+                logger.Axes.YAxis.IsVisible = signal.Visible;
+                logger.Color = signal.TraceColor;
+                logger.ManageAxisLimits = true;
+                logger.AxisManager = axisManager;
                 signal.PopUpLogger = logger;
                 signal.PropertyChanged +=
                 (s, e) =>
@@ -610,20 +702,190 @@ namespace Power_Supply_Control_WPF
                     if (e.PropertyName == nameof(PlotTrace.Visible))
                     {
                         logger.Axes.YAxis.IsVisible = signal.Visible;
+                        logger.IsVisible = signal.Visible;
                         myPlot.Refresh();
                     }
                 };
             }
+            myPlot.UserInputProcessor.Disable();
+            myPlot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
+            myPlot.Refresh();
+            myPlot.Plot.Axes.ContinuouslyAutoscale = true;
+
             timerUpdateWindow.Tick += (s, e) =>
             {
                 myPlot.Refresh();
+
             };
             timerUpdateWindow.Start();
+
             window.Content = myPlot;
             window.Title = "Positive Supply";
             window.Closing += (s, e) =>
             {
                 timerUpdateWindow.Stop();
+            };
+            window.Show();
+            return Task.CompletedTask;
+        }
+
+        private Task PopOutGraphN()
+        {
+            Window window = new Window();
+            ScottPlot.WPF.WpfPlot myPlot = new();
+            var adjAxis = myPlot.Plot.Axes.GetYAxes();
+            adjAxis.First().IsVisible = false;
+            foreach (PlotTrace signal in plotNegative.Traces)
+            {
+                DataLogger logger = myPlot.Plot.Add.DataLogger();
+                var axisY = myPlot.Plot.Axes.AddLeftAxis();
+                axisY.LabelText = signal.Name;
+                axisY.LabelText = signal.Name;
+                axisY.IsVisible = signal.Visible;
+                logger.IsVisible = signal.Visible;
+                logger.Axes.YAxis = axisY;
+                logger.LegendText = signal.Name;
+                logger.Axes.YAxis.IsVisible = signal.Visible;
+                logger.Color = signal.TraceColor;
+                logger.ManageAxisLimits = true;
+                logger.AxisManager = axisManager;
+                signal.PopUpLogger = logger;
+                signal.PropertyChanged +=
+                (s, e) =>
+                {
+                    if (e.PropertyName == nameof(PlotTrace.Visible))
+                    {
+                        logger.Axes.YAxis.IsVisible = signal.Visible;
+                        logger.IsVisible = signal.Visible;
+                        myPlot.Refresh();
+                    }
+                };
+            }
+            myPlot.UserInputProcessor.Disable();
+            myPlot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
+            myPlot.Refresh();
+            myPlot.Plot.Axes.ContinuouslyAutoscale = true;
+
+            timerUpdateWindowN.Tick += (s, e) =>
+            {
+                myPlot.Refresh();
+
+            };
+            timerUpdateWindowN.Start();
+
+            window.Content = myPlot;
+            window.Title = "Negative Supply";
+            window.Closing += (s, e) =>
+            {
+                timerUpdateWindowN.Stop();
+            };
+            window.Show();
+            return Task.CompletedTask;
+        }
+
+        private Task PopOutGraph3()
+        {
+            Window window = new Window();
+            ScottPlot.WPF.WpfPlot myPlot = new();
+            var adjAxis = myPlot.Plot.Axes.GetYAxes();
+            adjAxis.First().IsVisible = false;
+            foreach (PlotTrace signal in plot3V3.Traces)
+            {
+                DataLogger logger = myPlot.Plot.Add.DataLogger();
+                var axisY = myPlot.Plot.Axes.AddLeftAxis();
+                axisY.LabelText = signal.Name;
+                axisY.LabelText = signal.Name;
+                axisY.IsVisible = signal.Visible;
+                logger.IsVisible = signal.Visible;
+                logger.Axes.YAxis = axisY;
+                logger.LegendText = signal.Name;
+                logger.Axes.YAxis.IsVisible = signal.Visible;
+                logger.Color = signal.TraceColor;
+                logger.ManageAxisLimits = true;
+                logger.AxisManager = axisManager;
+                signal.PopUpLogger = logger;
+                signal.PropertyChanged +=
+                (s, e) =>
+                {
+                    if (e.PropertyName == nameof(PlotTrace.Visible))
+                    {
+                        logger.Axes.YAxis.IsVisible = signal.Visible;
+                        logger.IsVisible = signal.Visible;
+                        myPlot.Refresh();
+                    }
+                };
+            }
+            myPlot.UserInputProcessor.Disable();
+            myPlot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
+            myPlot.Refresh();
+            myPlot.Plot.Axes.ContinuouslyAutoscale = true;
+
+            timerUpdateWindow3.Tick += (s, e) =>
+            {
+                myPlot.Refresh();
+
+            };
+            timerUpdateWindow3.Start();
+
+            window.Content = myPlot;
+            window.Title = "3.3V Supply";
+            window.Closing += (s, e) =>
+            {
+                timerUpdateWindow3.Stop();
+            };
+            window.Show();
+            return Task.CompletedTask;
+        }
+
+        private Task PopOutGraph2()
+        {
+            Window window = new Window();
+            ScottPlot.WPF.WpfPlot myPlot = new();
+            var adjAxis = myPlot.Plot.Axes.GetYAxes();
+            adjAxis.First().IsVisible = false;
+            foreach (PlotTrace signal in plot2V5.Traces)
+            {
+                DataLogger logger = myPlot.Plot.Add.DataLogger();
+                var axisY = myPlot.Plot.Axes.AddLeftAxis();
+                axisY.LabelText = signal.Name;
+                axisY.LabelText = signal.Name;
+                axisY.IsVisible = signal.Visible;
+                logger.IsVisible = signal.Visible;
+                logger.Axes.YAxis = axisY;
+                logger.LegendText = signal.Name;
+                logger.Axes.YAxis.IsVisible = signal.Visible;
+                logger.Color = signal.TraceColor;
+                logger.ManageAxisLimits = true;
+                logger.AxisManager = axisManager;
+                signal.PopUpLogger = logger;
+                signal.PropertyChanged +=
+                (s, e) =>
+                {
+                    if (e.PropertyName == nameof(PlotTrace.Visible))
+                    {
+                        logger.Axes.YAxis.IsVisible = signal.Visible;
+                        logger.IsVisible = signal.Visible;
+                        myPlot.Refresh();
+                    }
+                };
+            }
+            myPlot.UserInputProcessor.Disable();
+            myPlot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
+            myPlot.Refresh();
+            myPlot.Plot.Axes.ContinuouslyAutoscale = true;
+
+            timerUpdateWindow2.Tick += (s, e) =>
+            {
+                myPlot.Refresh();
+
+            };
+            timerUpdateWindow2.Start();
+
+            window.Content = myPlot;
+            window.Title = "2.5V Supply";
+            window.Closing += (s, e) =>
+            {
+                timerUpdateWindow2.Stop();
             };
             window.Show();
             return Task.CompletedTask;

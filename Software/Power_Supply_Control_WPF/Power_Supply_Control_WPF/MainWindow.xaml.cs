@@ -23,7 +23,8 @@ namespace Power_Supply_Control_WPF
     public partial class MainWindow : Window
     {
         System.Windows.Threading.DispatcherTimer timerUpdate =new() { Interval = TimeSpan.FromMilliseconds(300) };
-        
+        static bool VP_Streaming, VN_Streaming, V3_Streaming, V2_Streaming = false;
+        private Power_Supply_Control_WPF.Services.AxisManager axisManager = new();
         public MainWindow()
         {
             InitializeComponent();
@@ -65,14 +66,13 @@ namespace Power_Supply_Control_WPF
                 var axisY = VPPlot.Plot.Axes.AddLeftAxis();
                 axisY.LabelText = signal.Name;
                 axisY.IsVisible = signal.Visible;
-                logger.ManageAxisLimits = false;
+                logger.IsVisible = signal.Visible;
                 logger.Axes.YAxis = axisY;
                 logger.LegendText = signal.Name;
-                logger.ViewSlide(50);
                 logger.Axes.YAxis.IsVisible = signal.Visible;
-                logger.Color = signal.Visible
-                    ? signal.TraceColor
-                    : ScottPlot.Color.FromSDColor(System.Drawing.Color.Transparent);
+                logger.Color = signal.TraceColor;
+                logger.ManageAxisLimits = true;
+                logger.AxisManager = axisManager;
                 signal.Logger = logger;
                 signal.PropertyChanged +=
                 (s, e) =>
@@ -80,12 +80,11 @@ namespace Power_Supply_Control_WPF
                     if (e.PropertyName == nameof(PlotTrace.Visible))
                     {
                         logger.Axes.YAxis.IsVisible = signal.Visible;
-                        logger.Color = signal.Visible
-                            ? signal.TraceColor
-                            : ScottPlot.Color.FromSDColor(System.Drawing.Color.Transparent);
+                        logger.IsVisible = signal.Visible;
                         VPPlot.Refresh();
                     }
                 };
+                
             }
 
             foreach (PlotTrace signal in dataContext.plotNegative.Traces)
@@ -94,14 +93,13 @@ namespace Power_Supply_Control_WPF
                 var axisY = VNPlot.Plot.Axes.AddLeftAxis();
                 axisY.LabelText = signal.Name;
                 axisY.IsVisible = signal.Visible;
-                logger.ManageAxisLimits = false;
+                logger.IsVisible = signal.Visible;
                 logger.Axes.YAxis = axisY;
                 logger.LegendText = signal.Name;
-                logger.ViewSlide(50);
                 logger.Axes.YAxis.IsVisible = signal.Visible;
-                logger.Color = signal.Visible
-                    ? signal.TraceColor
-                    : ScottPlot.Color.FromSDColor(System.Drawing.Color.Transparent);
+                logger.Color = signal.TraceColor;
+                logger.ManageAxisLimits = true;
+                logger.AxisManager = axisManager;
                 signal.Logger = logger;
                 signal.PropertyChanged +=
                 (s, e) =>
@@ -109,9 +107,7 @@ namespace Power_Supply_Control_WPF
                     if (e.PropertyName == nameof(PlotTrace.Visible))
                     {
                         logger.Axes.YAxis.IsVisible = signal.Visible;
-                        logger.Color = signal.Visible
-                            ? signal.TraceColor
-                            : ScottPlot.Color.FromSDColor(System.Drawing.Color.Transparent);
+                        logger.IsVisible = signal.Visible;
                         VNPlot.Refresh();
                     }
                 };
@@ -122,15 +118,15 @@ namespace Power_Supply_Control_WPF
                 DataLogger logger = V3Plot.Plot.Add.DataLogger();
                 var axisY = V3Plot.Plot.Axes.AddLeftAxis();
                 axisY.LabelText = signal.Name;
+                axisY.LabelText = signal.Name;
                 axisY.IsVisible = signal.Visible;
-                logger.ManageAxisLimits = false;
+                logger.IsVisible = signal.Visible;
                 logger.Axes.YAxis = axisY;
                 logger.LegendText = signal.Name;
-                logger.ViewSlide(50);
                 logger.Axes.YAxis.IsVisible = signal.Visible;
-                logger.Color = signal.Visible
-                    ? signal.TraceColor
-                    : ScottPlot.Color.FromSDColor(System.Drawing.Color.Transparent);
+                logger.Color = signal.TraceColor;
+                logger.ManageAxisLimits = true;
+                logger.AxisManager = axisManager;
                 signal.Logger = logger;
                 signal.PropertyChanged +=
                 (s, e) =>
@@ -138,9 +134,7 @@ namespace Power_Supply_Control_WPF
                     if (e.PropertyName == nameof(PlotTrace.Visible))
                     {
                         logger.Axes.YAxis.IsVisible = signal.Visible;
-                        logger.Color = signal.Visible
-                            ? signal.TraceColor
-                            : ScottPlot.Color.FromSDColor(System.Drawing.Color.Transparent);
+                        logger.IsVisible = signal.Visible;
                         V3Plot.Refresh();
                     }
                 };
@@ -151,15 +145,15 @@ namespace Power_Supply_Control_WPF
                 DataLogger logger = V2Plot.Plot.Add.DataLogger();
                 var axisY = V2Plot.Plot.Axes.AddLeftAxis();
                 axisY.LabelText = signal.Name;
+                axisY.LabelText = signal.Name;
                 axisY.IsVisible = signal.Visible;
-                logger.ManageAxisLimits = false;
+                logger.IsVisible = signal.Visible;
                 logger.Axes.YAxis = axisY;
                 logger.LegendText = signal.Name;
-                logger.ViewSlide(50);
                 logger.Axes.YAxis.IsVisible = signal.Visible;
-                logger.Color = signal.Visible
-                    ? signal.TraceColor
-                    : ScottPlot.Color.FromSDColor(System.Drawing.Color.Transparent);
+                logger.Color = signal.TraceColor;
+                logger.ManageAxisLimits = true;
+                logger.AxisManager = axisManager;
                 signal.Logger = logger;
                 signal.PropertyChanged +=
                 (s, e) =>
@@ -167,14 +161,12 @@ namespace Power_Supply_Control_WPF
                     if (e.PropertyName == nameof(PlotTrace.Visible))
                     {
                         logger.Axes.YAxis.IsVisible = signal.Visible;
-                        logger.Color = signal.Visible
-                            ? signal.TraceColor
-                            : ScottPlot.Color.FromSDColor(System.Drawing.Color.Transparent);
+                        logger.IsVisible = signal.Visible;
                         V2Plot.Refresh();
                     }
                 };
             }
-
+            
             VPPlot.UserInputProcessor.Disable();
             VNPlot.UserInputProcessor.Disable();
             V3Plot.UserInputProcessor.Disable();
@@ -190,14 +182,14 @@ namespace Power_Supply_Control_WPF
             V3Plot.Refresh();
             V2Plot.Refresh();
 
+            VPPlot.Plot.Axes.ContinuouslyAutoscale = true;
+            VNPlot.Plot.Axes.ContinuouslyAutoscale = true;
+            V3Plot.Plot.Axes.ContinuouslyAutoscale = true;
+            V2Plot.Plot.Axes.ContinuouslyAutoscale = true;
+
             timerUpdate.Tick += (s, e) =>
             {
-                if(LogVoltageP.IsChecked == true || LogCurrentP.IsChecked == true || LogPowerP.IsChecked == true)
-                {
-                    VPPlot.Refresh();
-                    VPPlot.Plot.Axes.AutoScaleY();
-                }
-                
+                VPPlot.Refresh();
                 VNPlot.Refresh();
                 V3Plot.Refresh();
                 V2Plot.Refresh();

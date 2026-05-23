@@ -572,8 +572,8 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Button Background="LimeGreen" Margin="2" Content="Autoscale" ToolTip="Autoscale graph points."/>
-                <Button Grid.Column="1" Background="LimeGreen" Margin="2" Content="Pop Out" ToolTip="Pop out graph to new window."/>
-                <Button Grid.Column="2" Background="LimeGreen" Margin="2" Content="Save CSV" ToolTip="Save measurements to CSV file."/>
+                <Button Grid.Column="1" Background="LimeGreen" Margin="2" Content="Pop Out" ToolTip="Pop out graph to new window." Command="{Binding PopOutGraphNegative}"/>
+                <Button Grid.Column="2" Background="LimeGreen" Margin="2" Content="Save CSV" ToolTip="Save measurements to CSV file." Command="{Binding SaveVN}"/>
                 <Button Grid.Column="3" Background="LimeGreen" Margin="2" Content="Reset" ToolTip="Reset File Path and Clear Data." Command="{Binding ClearGraphNegative}"/>
                 <Border Grid.Column="0" BorderBrush="DarkSlateGray" BorderThickness="1" Margin="2" CornerRadius="5"/>
                 <Border Grid.Column="1" BorderBrush="DarkSlateGray" BorderThickness="1" Margin="2" CornerRadius="5"/>
@@ -591,8 +591,8 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Button Background="LimeGreen" Margin="2" Content="Autoscale" ToolTip="Autoscale graph points."/>
-                <Button Grid.Column="1" Background="LimeGreen" Margin="2" Content="Pop Out" ToolTip="Pop out graph to new window."/>
-                <Button Grid.Column="2" Background="LimeGreen" Margin="2" Content="Save CSV" ToolTip="Save measurements to CSV file."/>
+                <Button Grid.Column="1" Background="LimeGreen" Margin="2" Content="Pop Out" ToolTip="Pop out graph to new window." Command="{Binding PopOutGraph3V3}"/>
+                <Button Grid.Column="2" Background="LimeGreen" Margin="2" Content="Save CSV" ToolTip="Save measurements to CSV file." Command="{Binding SaveV3}"/>
                 <Button Grid.Column="3" Background="LimeGreen" Margin="2" Content="Reset" ToolTip="Reset File Path and Clear Data." Command="{Binding ClearGraph3V3}"/>
                 <Border Grid.Column="0" BorderBrush="DarkSlateGray" BorderThickness="1" Margin="2" CornerRadius="5"/>
                 <Border Grid.Column="1" BorderBrush="DarkSlateGray" BorderThickness="1" Margin="2" CornerRadius="5"/>
@@ -610,8 +610,8 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Button Background="LimeGreen" Margin="2" Content="Autoscale" ToolTip="Autoscale graph points."/>
-                <Button Grid.Column="1" Background="LimeGreen" Margin="2" Content="Pop Out" ToolTip="Pop out graph to new window."/>
-                <Button Grid.Column="2" Background="LimeGreen" Margin="2" Content="Save CSV" ToolTip="Save measurements to CSV file."/>
+                <Button Grid.Column="1" Background="LimeGreen" Margin="2" Content="Pop Out" ToolTip="Pop out graph to new window." Command="{Binding PopOutGraph2V5}"/>
+                <Button Grid.Column="2" Background="LimeGreen" Margin="2" Content="Save CSV" ToolTip="Save measurements to CSV file." Command="{Binding SaveV2}"/>
                 <Button Grid.Column="3" Background="LimeGreen" Margin="2" Content="Reset" ToolTip="Reset File Path and Clear Data." Command="{Binding ClearGraph2V5}"/>
                 <Border Grid.Column="0" BorderBrush="DarkSlateGray" BorderThickness="1" Margin="2" CornerRadius="5"/>
                 <Border Grid.Column="1" BorderBrush="DarkSlateGray" BorderThickness="1" Margin="2" CornerRadius="5"/>

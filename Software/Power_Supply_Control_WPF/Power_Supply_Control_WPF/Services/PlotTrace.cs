@@ -33,10 +33,10 @@ namespace Power_Supply_Control_WPF.Services
 
         public void AddPoint(double x,double y)
         {
-            Logger!.Add(y);
+            Logger!.Add(x,y);
 
             if(PopUpLogger != null)
-                PopUpLogger!.Add(y);
+                PopUpLogger!.Add(x,y);
         }
 
         public void Clear()
