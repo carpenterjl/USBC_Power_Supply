@@ -118,13 +118,20 @@ void StartvMeasureTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  HAL_GPIO_TogglePin(GPIO6_GPIO_Port, GPIO6_Pin); //Scope 100Hz sync signal
 	  osDelay(5);
   }
   //Terminate task in case of exit of main while loop
   osThreadTerminate(NULL);
   /* USER CODE END StartvMeasureTask */
 }
+
+Sys_PS_Settings Power_Supply_Settings =
+{
+		0,
+		0,
+		0,
+		0,
+};
 
 /* USER CODE BEGIN Header_StartiMeasureTask */
 /**
@@ -133,12 +140,36 @@ void StartvMeasureTask(void *argument)
 * @retval None
 */
 /* USER CODE END Header_StartiMeasureTask */
+static float IN_Z = 0;
 void StartiMeasureTask(void *argument)
 {
   /* USER CODE BEGIN StartiMeasureTask */
+	float IP,IN,I3,I2 = 0;
+	UNUSED(I3);
+	UNUSED(I2);
+
   /* Infinite loop */
   for(;;)
   {
+	if(IN_Z == 0)
+	{
+		if(adc_dma_buffer[2] != 0)
+		{
+			IN_Z = (float)adc_dma_buffer[2] / 4095.0f * 2.5f * 1.111;
+		}
+	}
+	IP = (float)adc_dma_buffer[10] / 4095.0f * 2.5f * 2;
+	IN = (float)adc_dma_buffer[2] / 4095.0f * 2.5f * 1.111 - IN_Z;
+	I3 = (float)adc_dma_buffer[3] / 4095.0f * 2.5f * 2;
+	I2 = (float)adc_dma_buffer[9] / 4095.0f * 2.5f * 2;
+	if(Power_Supply_Settings.ILIM_POSITIVE != 0)
+	{
+		ProcessCurrentLimit(IP*1000.0f);
+	}
+	if(Power_Supply_Settings.ILIM_NEGATIVE != 0)
+	{
+		ProcessCurrentLimitN(IN*1000.0f);
+	}
     osDelay(1);
   }
   //Terminate task in case of exit of main while loop
@@ -178,12 +209,14 @@ void StartResponseTask(void *argument)
 				case VPOS_SET:
 					voltage = (float)messageInQueue.value / 1000.0f;
 					SetPositiveSupply(voltage, 0);
+					Power_Supply_Settings.V_SET_POSITIVE = voltage;
 					sprintf(response, "OK");
 				break;
 				case VNEG_SET:
 					voltage = (float)messageInQueue.value / 1000.0f;
 					SetNegativeSupply(voltage, 0);
 					sprintf(response, "OK");
+					Power_Supply_Settings.V_SET_NEGATIVE = voltage;
 				break;
 
 				/* --- Voltage Rails Getters --- */
@@ -224,7 +257,7 @@ void StartResponseTask(void *argument)
 					sprintf(response, "%.3f", current);
 				break;
 				case INEG_GET:
-					current = (float)adc_dma_buffer[2] / 4095.0f * 2.5f * 1.111;
+					current = (float)adc_dma_buffer[2] / 4095.0f * 2.5f * 1.111 - IN_Z;
 					sprintf(response, "%.3f", current);
 				break;
 				case I3V3_GET:
@@ -293,6 +326,17 @@ void StartResponseTask(void *argument)
 						sprintf(response, "%lu", STACK_SIZE_REMAINING[messageInQueue.value]);
 					}
 					break;
+
+				/* --- Current Setters --- */
+				case CURRENT_SET_P:
+					Power_Supply_Settings.ILIM_POSITIVE = (float)messageInQueue.value;
+					sprintf(response, "OK");
+				break;
+				case CURRENT_SET_N:
+					Power_Supply_Settings.ILIM_NEGATIVE = (float)messageInQueue.value;
+					sprintf(response, "OK");
+				break;
+
 				default:
 					// Handle unknown command ID
 					sprintf(response, "ERR");

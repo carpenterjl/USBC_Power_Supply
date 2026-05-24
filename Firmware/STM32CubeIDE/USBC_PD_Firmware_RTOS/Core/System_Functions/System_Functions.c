@@ -416,3 +416,113 @@ void SendResponse(SerialMsg_t *source_message, char *results)
     }
     return;
 }
+
+extern Sys_PS_Settings Power_Supply_Settings;
+//PI Controller for Current Limiting
+void ProcessCurrentLimit(float current_mA)
+{
+#define IP_LIM_mA Power_Supply_Settings.ILIM_POSITIVE
+#define KI_GAIN		0.001
+#define KP_GAIN		0.0005
+
+    static float integral_error = 0.0f;
+    static float last_v_set = 0.0f;
+    float current_error = current_mA - IP_LIM_mA;
+	static uint8_t CURRENT_LIMITING_P = 0;
+	float MAX_I_REG = Power_Supply_Settings.V_SET_POSITIVE - 2.5f;
+	if(last_v_set != Power_Supply_Settings.V_SET_POSITIVE)
+	{
+		last_v_set = Power_Supply_Settings.V_SET_POSITIVE;
+		integral_error = 0;
+	}
+    if (current_error > 0.0f || CURRENT_LIMITING_P)
+    {
+        // 1. We are over-current, or recovering from it
+        CURRENT_LIMITING_P = 1;
+
+        // 2. Accumulate integral error (with anti-windup protection)
+        integral_error += current_error * KI_GAIN;
+        if (integral_error > MAX_I_REG) integral_error = MAX_I_REG;
+        if (integral_error < 0.0f) integral_error = 0.0f;
+
+        // 3. Compute total voltage reduction (P + I)
+        float v_reduction = (current_error * KP_GAIN) + integral_error;
+
+        // 4. Calculate new target voltage
+        float v_target = Power_Supply_Settings.V_SET_POSITIVE - v_reduction;
+
+        // 5. Check safety boundaries
+        if (v_target <= 2.5f)
+        {
+            DisableOutput(V_Positive);
+            integral_error = 0.0f;
+            CURRENT_LIMITING_P = 0;
+        }
+        else if (v_target >= Power_Supply_Settings.V_SET_POSITIVE)
+        {
+            // Fully recovered to original setpoint
+            SetPositiveSupply(Power_Supply_Settings.V_SET_POSITIVE, 0);
+            integral_error = 0.0f;
+            CURRENT_LIMITING_P = 0;
+        }
+        else
+        {
+            // Apply the smoothly throttled voltage
+            SetPositiveSupply(v_target, 0);
+        }
+    }
+}
+
+void ProcessCurrentLimitN(float current_mA)
+{
+#define IN_LIM_mA 	Power_Supply_Settings.ILIM_NEGATIVE
+#define KI_GAIN		0.001
+#define KP_GAIN		0.0005
+
+    static float integral_error = 0.0f;
+    static float last_v_set = 0.0f;
+    float current_error = current_mA - IN_LIM_mA;
+	static uint8_t CURRENT_LIMITING_N = 0;
+	float MAX_I_REG = Power_Supply_Settings.V_SET_NEGATIVE + 2.5f;
+	if(last_v_set != Power_Supply_Settings.V_SET_NEGATIVE)
+	{
+		last_v_set = Power_Supply_Settings.V_SET_NEGATIVE;
+		integral_error = 0;
+	}
+    if (current_error > 0.0f || CURRENT_LIMITING_N)
+    {
+        // 1. We are over-current, or recovering from it
+        CURRENT_LIMITING_N = 1;
+
+        // 2. Accumulate integral error (with anti-windup protection)
+        integral_error += current_error * KI_GAIN;
+        if (integral_error > MAX_I_REG) integral_error = MAX_I_REG;
+        if (integral_error < 0.0f) integral_error = 0.0f;
+
+        // 3. Compute total voltage reduction (P + I)
+        float v_reduction = (current_error * KP_GAIN) + integral_error;
+
+        // 4. Calculate new target voltage
+        float v_target = Power_Supply_Settings.V_SET_NEGATIVE + v_reduction;
+
+        // 5. Check safety boundaries
+        if (v_target >= -2.5f)
+        {
+            DisableOutput(V_Negative);
+            integral_error = 0.0f;
+            CURRENT_LIMITING_N = 0;
+        }
+        else if (v_target >= Power_Supply_Settings.V_SET_NEGATIVE)
+        {
+            // Fully recovered to original setpoint
+            SetNegativeSupply(Power_Supply_Settings.V_SET_NEGATIVE, 0);
+            integral_error = 0.0f;
+            CURRENT_LIMITING_N = 0;
+        }
+        else
+        {
+            // Apply the smoothly throttled voltage
+            SetPositiveSupply(v_target, 0);
+        }
+    }
+}

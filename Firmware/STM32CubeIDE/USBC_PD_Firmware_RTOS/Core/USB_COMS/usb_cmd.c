@@ -28,6 +28,7 @@ static const USB_COMMANDS CMD_LIST[] =
 	{ "USBPD",	"<Voltage (float)>:<Current (float)>", "Request V,I from USBC-PD Host", request_usbc_voltage},
 	{ "IGET",	"P/N/3/2",	"Get supply current", get_supply_current},
 	{ "STACK",	"[0-5]",	"Return stack space remaining in bytes for task N.", check_stack},
+	{ "ILIM",	"P/N/3/2",	"Set Current Limit.", set_current_limit}
 };
 
 #define CMDS_LEN struct_size(CMD_LIST)
@@ -330,10 +331,6 @@ void measurement_mode(char *args)
 //	should_start_adc = !should_start_adc;
 //	printf("OK\n");
 	return;
-
-	ERRORSUPPLYSET:
-	printf("Invalid Supply\n");
-	return;
 }
 
 void request_usbc_voltage(char *args)
@@ -403,6 +400,30 @@ void check_stack(char *args)
 	message.requesterTask = SRC_USB;
 	message.commandID = STACK_SPACE;
 	message.value = task_id;
+	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
+	return;
+}
+
+void set_current_limit(char *args)
+{
+	char *supply = strtok(args, ":");
+	if(!supply) return;
+	char *current = strtok(NULL, ":");
+	if(!current) return;
+	float i_set = strtof(current, NULL);
+	SerialMsg_t message;
+	message.requesterTask = SRC_USB;
+	switch(supply[0])
+	{
+	case 'P':
+		message.commandID = CURRENT_SET_P;
+		break;
+	case 'N':
+		message.commandID = CURRENT_SET_N;
+		break;
+	default: break;
+	}
+	message.value = (int16_t)i_set;
 	osMessageQueuePut(serialDataQueueHandle, &message, 0, osWaitForever);
 	return;
 }

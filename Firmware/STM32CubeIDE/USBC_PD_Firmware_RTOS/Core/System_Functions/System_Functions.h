@@ -42,6 +42,14 @@ typedef struct
 	uint32_t ADC_Channel;
 }I_ADC;
 
+typedef struct
+{
+	float V_SET_POSITIVE;
+	float V_SET_NEGATIVE;
+	float ILIM_POSITIVE;
+	float ILIM_NEGATIVE;
+}Sys_PS_Settings;
+
 extern ADC_HandleTypeDef hadc1;
 extern uint16_t adc_dma_buffer[11];
 void SetPositiveSupply(float set_voltage, float max_current);
@@ -52,7 +60,8 @@ void DisableOutput(Voltage_Sources V_Source);
 float ReadVoltage(Voltage_Sources V_Source);
 float ReadCurrent(Current_Sources I_Source);
 float ReadPower(Voltage_Sources V_Source, Current_Sources I_Source);
-
+void ProcessCurrentLimit(float current_mA);
+void ProcessCurrentLimitN(float current_mA);
 uint32_t Read_ADC_Channel(ADC_HandleTypeDef *hadc, uint32_t channel);
 float Read_Calibrated_Voltage(uint16_t raw_adc_reading);
 
@@ -103,6 +112,8 @@ typedef enum
 	ALL_ENABLE	=	0x18,
 	ALL_DISABLE	=	0x19,
 	STACK_SPACE =	0x1A,
+	CURRENT_SET_P =	0x1B,
+	CURRENT_SET_N =	0x1C,
 }SYSTEM_COMMANDS_ENUM;
 
 #define LED_PERIOD_HALF (500/portTICK_PERIOD_MS)

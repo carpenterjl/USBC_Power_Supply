@@ -79,7 +79,7 @@ const osThreadAttr_t usbCommandTask_attributes = {
   .name = "usbCommandTask",
   .priority = (osPriority_t) osPriorityNormal,
 //  .stack_size = 512 * 4
-  .stack_size = 1432
+  .stack_size = 1024
 };
 /* Definitions for vMeasureTask */
 osThreadId_t vMeasureTaskHandle;
@@ -95,7 +95,7 @@ const osThreadAttr_t iMeasureTask_attributes = {
   .name = "iMeasureTask",
   .priority = (osPriority_t) osPriorityBelowNormal7,
 //  .stack_size = 128 * 4
-  .stack_size = 192
+  .stack_size = 512
 };
 /* Definitions for cmdResponseTask */
 osThreadId_t cmdResponseTaskHandle;
@@ -103,7 +103,7 @@ const osThreadAttr_t cmdResponseTask_attributes = {
   .name = "cmdResponseTask",
   .priority = (osPriority_t) osPriorityNormal1,
 //  .stack_size = 512 * 4
-  .stack_size = 1520
+  .stack_size = 1024
 };
 /* Definitions for serialDataQueue */
 osMessageQueueId_t serialDataQueueHandle;
