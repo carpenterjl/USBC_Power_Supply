@@ -76,10 +76,13 @@ namespace Power_Supply_Control_WPF
 
         private Power_Supply_Control_WPF.Services.AxisManager axisManager = new();
         private readonly MainWindow _mainWindow;
-        public PSViewModel(PowerSupplyService powerSupplyService, MainWindow main_window)
+        public ConsoleLogger Logger { get; }
+
+        public PSViewModel(PowerSupplyService powerSupplyService, MainWindow main_window, ConsoleLogger logger)
         {
             _powerSupplyService = powerSupplyService;
             _mainWindow = main_window;
+            Logger = logger;
             ToggleVPCommand = new AsyncRelayCommand(ToggleVP);
             ToggleVNCommand = new AsyncRelayCommand(ToggleVN);
             ToggleV3V3Command = new AsyncRelayCommand(ToggleV3);
@@ -112,7 +115,7 @@ namespace Power_Supply_Control_WPF
             plot3V3 = CreatePlot("3V3 Supply");
             plot2V5 = CreatePlot("2V5 Supply");
 
-            SYSTEM = new MeasurementRow { Name="SYSTEM", Voltage=0, Current=0 };
+            SYSTEM = new MeasurementRow { Name = "SYSTEM", Voltage = 0, Current = 0 };
             USB = new MeasurementRow { Name = "USB", Voltage = 0, Current = 0 };
             V5 = new MeasurementRow { Name = "5V", Voltage = 0, Current = 0 };
             V33 = new MeasurementRow { Name = "3.3V", Voltage = 0, Current = 0 };
@@ -132,6 +135,20 @@ namespace Power_Supply_Control_WPF
             {
                 await UpdateMeasurements();
             };
+
+            Logger.Messages.CollectionChanged +=
+                (s, e) =>
+                {
+                    _mainWindow.Dispatcher.BeginInvoke(
+                        new Action(() =>
+                        {
+                            if (_mainWindow.ConsoleBox.Items.Count > 0)
+                            {
+                                _mainWindow.ConsoleBox.ScrollIntoView(_mainWindow.ConsoleBox.Items[_mainWindow.ConsoleBox.Items.Count - 1]);
+                            }
+                        }),
+                        System.Windows.Threading.DispatcherPriority.Background);
+                };
         }
 
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -349,9 +366,12 @@ namespace Power_Supply_Control_WPF
                     if (autoUpdates)
                     {
                         timerAutoUpdate.Start();
-                    }else
+                        Logger.Add(ConsoleMessage.LogLevel.Measurement, "App", "Updates started.");
+                    }
+                    else
                     {
                         timerAutoUpdate.Stop();
+                        Logger.Add(ConsoleMessage.LogLevel.Measurement, "App", "Updates stopped.");
                     }
                     OnPropertyChanged();
                 }
@@ -373,6 +393,7 @@ namespace Power_Supply_Control_WPF
             if(deviceConnected == true)
             {
                 VPEnabled = await _powerSupplyService.ToggleVP();
+                Logger.Add(ConsoleMessage.LogLevel.Command, "Toggle", $"VPos:{(VPEnabled ? "ENABLED" : "DISABLED")}");
             }
         }
 
@@ -381,6 +402,7 @@ namespace Power_Supply_Control_WPF
             if (deviceConnected == true)
             {
                 VNEnabled = await _powerSupplyService.ToggleVN();
+                Logger.Add(ConsoleMessage.LogLevel.Command, "Toggle", $"VNeg:{(VNEnabled ? "ENABLED" : "DISABLED")}");
             }
         }
 
@@ -389,6 +411,7 @@ namespace Power_Supply_Control_WPF
             if (deviceConnected == true)
             {
                 V3Enabled = await _powerSupplyService.ToggleV3();
+                Logger.Add(ConsoleMessage.LogLevel.Command, "Toggle", $"V3.3:{(V3Enabled ? "ENABLED" : "DISABLED")}");
             }
         }
 
@@ -397,6 +420,7 @@ namespace Power_Supply_Control_WPF
             if (deviceConnected == true)
             {
                 V2Enabled = await _powerSupplyService.ToggleV2();
+                Logger.Add(ConsoleMessage.LogLevel.Command, "Toggle", $"V2.5:{(V2Enabled ? "ENABLED" : "DISABLED")}");
             }
         }
 
@@ -405,6 +429,7 @@ namespace Power_Supply_Control_WPF
             if (deviceConnected == true)
             {
                 await _powerSupplyService.SetVP((float)_voltagePositive);
+                Logger.Add(ConsoleMessage.LogLevel.Command, "Config", $"VPos;V Set to: {(float)_voltagePositive:F3} Volts");
             }
         }
 
@@ -421,6 +446,7 @@ namespace Power_Supply_Control_WPF
             if (deviceConnected == true)
             {
                 await _powerSupplyService.SetVN((float)_voltageNegative);
+                Logger.Add(ConsoleMessage.LogLevel.Command, "Config", $"VNeg;V Set to: {(float)_voltagePositive:F3} Volts");
             }
         }
 
@@ -453,6 +479,7 @@ namespace Power_Supply_Control_WPF
             if (deviceConnected == true)
             {
                 await _powerSupplyService.setIP((float)_currentLimP);
+                Logger.Add(ConsoleMessage.LogLevel.Command, "Config", $"VPos;Current Limit Set to: {(float)_currentLimP:F3} mA");
             }
         }
 
@@ -461,6 +488,7 @@ namespace Power_Supply_Control_WPF
             if (deviceConnected == true)
             {
                 await _powerSupplyService.setIN((float)_currentLimN);
+                Logger.Add(ConsoleMessage.LogLevel.Command, "Config", $"VNeg;Current Limit Set to: {(float)_currentLimN:F3} mA");
             }
         }
 
@@ -501,11 +529,13 @@ namespace Power_Supply_Control_WPF
             {
                 bool? Connected = await _powerSupplyService.ConnectToDevice(deviceCOMPort);
                 this.DeviceConnectedStatus = Connected == true;
+                Logger.Add(ConsoleMessage.LogLevel.Info, "App", "Device Connected.");
             }
             else
             {
                 await _powerSupplyService.Disconnect();
                 this.DeviceConnectedStatus = false;
+                Logger.Add(ConsoleMessage.LogLevel.Info, "App", "Device Disconnected.");
             }
         }
 
@@ -515,7 +545,11 @@ namespace Power_Supply_Control_WPF
         {
             if (deviceCOMPort == null) return;
 
-            if (_isUpdating) return;
+            if (_isUpdating)
+            {
+                //Logger.Add(ConsoleMessage.LogLevel.Warning, "App", "Thread called too soon.");
+                return;
+            }
 
             if (deviceConnected == true)
             {
@@ -529,9 +563,13 @@ namespace Power_Supply_Control_WPF
                 double t = sp.Timestamp.ToOADate();
                 TimeSpan duration = DateTime.Now - startMeasTime;
                 t = duration.TotalMilliseconds;
-                plotPositive.Traces[0].AddPoint(t, vp);
-                plotPositive.Traces[1].AddPoint(t, ip);
-                plotPositive.Traces[2].AddPoint(t, pp);
+                if (plotPositive.Traces[0].Visible || plotPositive.Traces[1].Visible || plotPositive.Traces[2].Visible)
+                {
+                    plotPositive.Traces[0].AddPoint(t, vp);
+                    plotPositive.Traces[1].AddPoint(t, ip);
+                    plotPositive.Traces[2].AddPoint(t, pp);
+
+                }
                 VP.Voltage = vp;
                 VP.Current = ip;
 
@@ -542,9 +580,12 @@ namespace Power_Supply_Control_WPF
                 dataSourceNegativeSupply.Add(sn);
                 duration = DateTime.Now - startMeasTime;
                 t = duration.TotalMilliseconds;
-                plotNegative.Traces[0].AddPoint(t, vn);
-                plotNegative.Traces[1].AddPoint(t, ineg);
-                plotNegative.Traces[2].AddPoint(t, pn);
+                if (plotNegative.Traces[0].Visible || plotNegative.Traces[1].Visible || plotNegative.Traces[2].Visible)
+                {
+                    plotNegative.Traces[0].AddPoint(t, vn);
+                    plotNegative.Traces[1].AddPoint(t, ineg);
+                    plotNegative.Traces[2].AddPoint(t, pn);
+                }
                 VN.Voltage = vn;
                 VN.Current = ineg;
 
@@ -555,9 +596,12 @@ namespace Power_Supply_Control_WPF
                 dataSource3V3Supply.Add(s3);
                 duration = DateTime.Now - startMeasTime;
                 t = duration.TotalMilliseconds;
-                plot3V3.Traces[0].AddPoint(t, v3);
-                plot3V3.Traces[1].AddPoint(t, i3);
-                plot3V3.Traces[2].AddPoint(t, p3);
+                if (plot3V3.Traces[0].Visible || plot3V3.Traces[1].Visible || plot3V3.Traces[2].Visible)
+                {
+                    plot3V3.Traces[0].AddPoint(t, v3);
+                    plot3V3.Traces[1].AddPoint(t, i3);
+                    plot3V3.Traces[2].AddPoint(t, p3);
+                }
                 V33.Voltage = v3;
                 V33.Current = i3;
 
@@ -568,12 +612,16 @@ namespace Power_Supply_Control_WPF
                 dataSource2V5Supply.Add(s2);
                 duration = DateTime.Now - startMeasTime;
                 t = duration.TotalMilliseconds;
-                plot2V5.Traces[0].AddPoint(t, v2);
-                plot2V5.Traces[1].AddPoint(t, i2);
-                plot2V5.Traces[2].AddPoint(t, p2);
+                if (plot2V5.Traces[0].Visible || plot2V5.Traces[1].Visible || plot2V5.Traces[2].Visible)
+                {
+                    plot2V5.Traces[0].AddPoint(t, v2);
+                    plot2V5.Traces[1].AddPoint(t, i2);
+                    plot2V5.Traces[2].AddPoint(t, p2);
+                }
                 V25.Voltage = v2;
                 V25.Current = i2;
                 _isUpdating = false;
+                //Logger.Add(ConsoleMessage.LogLevel.Measurement, "App", "Updates completed.");
             }
         }
 
@@ -623,6 +671,7 @@ namespace Power_Supply_Control_WPF
             {
                 await sw.WriteLineAsync($"{vpV[idx].X}," + $"{vpV[idx].Y}," + $"{vpI[idx].Y}," + $"{vpP[idx].Y}");
             }
+            Logger.Add(ConsoleMessage.LogLevel.Info, "App", $"File '{filename}' Saved.");
         }
 
         public async Task SaveVPFile()
@@ -702,6 +751,7 @@ namespace Power_Supply_Control_WPF
             plotPositive.VoltageTrace.Clear();
             plotPositive.CurrentTrace.Clear();
             plotPositive.PowerTrace.Clear();
+            Logger.Add(ConsoleMessage.LogLevel.Info, "App", "Graph Cleared.");
             return Task.CompletedTask;
         }
 
@@ -710,6 +760,7 @@ namespace Power_Supply_Control_WPF
             plotNegative.VoltageTrace.Clear();
             plotNegative.CurrentTrace.Clear();
             plotNegative.PowerTrace.Clear();
+            Logger.Add(ConsoleMessage.LogLevel.Info, "App", "Graph Cleared.");
             return Task.CompletedTask;
         }
 
@@ -718,6 +769,7 @@ namespace Power_Supply_Control_WPF
             plot3V3.VoltageTrace.Clear();
             plot3V3.CurrentTrace.Clear();
             plot3V3.PowerTrace.Clear();
+            Logger.Add(ConsoleMessage.LogLevel.Info, "App", "Graph Cleared.");
             return Task.CompletedTask;
         }
 
@@ -726,6 +778,7 @@ namespace Power_Supply_Control_WPF
             plot2V5.VoltageTrace.Clear();
             plot2V5.CurrentTrace.Clear();
             plot2V5.PowerTrace.Clear();
+            Logger.Add(ConsoleMessage.LogLevel.Info, "App", "Graph Cleared.");
             return Task.CompletedTask;
         }
 
@@ -738,6 +791,8 @@ namespace Power_Supply_Control_WPF
                     double max = signal.Logger.Data.Coordinates.Max(c => c.Y);
                     double min = signal.Logger.Data.Coordinates.Min(c => c.Y);
                     _mainWindow.addPlotLim("P", min, max);
+                    Logger.Add(ConsoleMessage.LogLevel.Info, "App", $"Added plot limits for {signal.Name}");
+                    Logger.Add(ConsoleMessage.LogLevel.Measurement, "Limits", $"Low: {max:F3}, High: {min:F3}");
                 }
             }
             return Task.CompletedTask;
@@ -752,6 +807,8 @@ namespace Power_Supply_Control_WPF
                     double max = signal.Logger.Data.Coordinates.Max(c => c.Y);
                     double min = signal.Logger.Data.Coordinates.Min(c => c.Y);
                     _mainWindow.addPlotLim("N", min, max);
+                    Logger.Add(ConsoleMessage.LogLevel.Info, "App", $"Added plot limits for {signal.Name}");
+                    Logger.Add(ConsoleMessage.LogLevel.Measurement, "Limits", $"Low: {max:F3}, High: {min:F3}");
                 }
             }
             return Task.CompletedTask;
@@ -766,6 +823,8 @@ namespace Power_Supply_Control_WPF
                     double max = signal.Logger.Data.Coordinates.Max(c => c.Y);
                     double min = signal.Logger.Data.Coordinates.Min(c => c.Y);
                     _mainWindow.addPlotLim("3", min, max);
+                    Logger.Add(ConsoleMessage.LogLevel.Info, "App", $"Added plot limits for {signal.Name}");
+                    Logger.Add(ConsoleMessage.LogLevel.Measurement, "Limits", $"Low: {max:F3}, High: {min:F3}");
                 }
             }
             return Task.CompletedTask;
@@ -780,6 +839,8 @@ namespace Power_Supply_Control_WPF
                     double max = signal.Logger.Data.Coordinates.Max(c => c.Y);
                     double min = signal.Logger.Data.Coordinates.Min(c => c.Y);
                     _mainWindow.addPlotLim("2", min, max);
+                    Logger.Add(ConsoleMessage.LogLevel.Info, "App", $"Added plot limits for {signal.Name}");
+                    Logger.Add(ConsoleMessage.LogLevel.Measurement, "Limits", $"Low: {max:F3}, High: {min:F3}");
                 }
             }
             return Task.CompletedTask;
@@ -992,7 +1053,6 @@ namespace Power_Supply_Control_WPF
             timerUpdateWindow2.Tick += (s, e) =>
             {
                 myPlot.Refresh();
-
             };
             timerUpdateWindow2.Start();
 

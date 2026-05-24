@@ -78,6 +78,7 @@
                 </Grid.RowDefinitions>
                 <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="2"/>
                 <Rectangle Fill="#FF474A52"/>
+                <Border Grid.Row="0" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
                 <TextBlock Text="V_Positive" Foreground="Snow" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <Grid Grid.Row= "1">
                     <Grid.ColumnDefinitions>
@@ -195,6 +196,7 @@
                 </Grid.RowDefinitions>
                 <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="2"/>
                 <Rectangle Fill="#FF474A52"/>
+                <Border Grid.Row="0" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
                 <TextBlock Text="V_Negative" Foreground="Snow" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <Grid Grid.Row= "1">
                     <Grid.ColumnDefinitions>
@@ -312,6 +314,7 @@
                 </Grid.RowDefinitions>
                 <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="2"/>
                 <Rectangle Fill="#FF474A52"/>
+                <Border Grid.Row="0" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
                 <TextBlock Text="3V3" Foreground="Snow" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <Grid Grid.Row= "1">
                     <Grid.ColumnDefinitions>
@@ -419,6 +422,7 @@
                 </Grid.RowDefinitions>
                 <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="2"/>
                 <Rectangle Fill="#FF474A52"/>
+                <Border Grid.Row="0" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
                 <TextBlock Text="2V5" Foreground="Snow" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <Grid Grid.Row= "1">
                     <Grid.ColumnDefinitions>
@@ -531,7 +535,23 @@
                     <CheckBox Content="Enable Auto Measurements" FontSize="16" Foreground="Snow" VerticalContentAlignment="Center" Margin="5" ToolTip="Automatically collect new data to populate charts and tables." IsChecked="{Binding AutoUpdateChecked}"/>
                     <Button Grid.Column="1" Margin="5" Content="Refresh Measurements" FontSize="16" ToolTip="Collect all measurements and populate charts and tables." Command="{Binding GetUpdate}"/>
                 </Grid>
-                <DataGrid Grid.Row="1"/>
+                <Border Grid.Row="0" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
+                <ListBox x:Name="ConsoleBox" Grid.Row="1" ItemsSource="{Binding Logger.Messages}" Background="Black" BorderThickness="1.5" Foreground="Snow" BorderBrush="Snow">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Foreground="{Binding Foreground}" FontFamily="Consolas" FontSize="12">
+                                <Run Text="["/>
+                                <Run Text="{Binding Timestamp, StringFormat=HH:mm:ss.fff}"/>
+                                <Run Text="] "/>
+                                <Run Text="{Binding Level}"/>
+                                <Run Text=" "/>
+                                <Run Text="{Binding Source}"/>
+                                <Run Text=" : "/>
+                                <Run Text="{Binding Message}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
                 <DataGrid Grid.Row="2" ItemsSource="{Binding Measurements}" AutoGenerateColumns="False" ColumnWidth="*" FontSize="20" CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeColumns="False" CanUserSortColumns="False" IsReadOnly="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
