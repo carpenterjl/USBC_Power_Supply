@@ -41,4 +41,5 @@ void disable_supply(char *args);
 void measurement_mode(char *args);
 void request_usbc_voltage(char *args);
 void check_stack(char *args);
+void set_current_limit(char *args);
 #endif
