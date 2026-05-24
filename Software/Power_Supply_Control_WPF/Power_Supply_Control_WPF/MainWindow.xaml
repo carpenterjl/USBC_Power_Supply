@@ -54,7 +54,7 @@
                     </Style>
                 </Button.Style>
             </Button>
-            <ComboBox Name="comboBoxPortsList" Width="200" Height="30" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5" ToolTip="COM Port Selection for Power Supply serial communication." Text="{Binding SelectedPortName}"/>
+            <ComboBox Name="comboBoxPortsList" Width="200" Height="30" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5" ToolTip="COM Port Selection for Power Supply serial communication." Text="{Binding SelectedPortName}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Select the COM port below." Foreground="Snow" FontSize="16" HorizontalAlignment="Right" Margin="5" VerticalAlignment="Top"/>
         </Grid>
         <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="USBC Power Supply V1.0" FontSize="27.75" Foreground="Snow" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -76,6 +76,7 @@
                     <RowDefinition Height="0.2*"/>
                     <RowDefinition Height="0.3*"/>
                 </Grid.RowDefinitions>
+                <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="2"/>
                 <Rectangle Fill="#FF474A52"/>
                 <TextBlock Text="V_Positive" Foreground="Snow" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <Grid Grid.Row= "1">
@@ -93,7 +94,8 @@
                             <RowDefinition Height="0.4*"/>
                             <RowDefinition Height="0.5*"/>
                         </Grid.RowDefinitions>
-
+                        <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
+                        <Border Grid.Row="2" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
                         <CheckBox Name="adjVP" Content="Adjust&#10;Limits" Foreground="Snow" VerticalAlignment="Center" Margin="5"/>
 
                         <TextBlock Grid.Row="1" Text="Upper" Foreground="Snow" HorizontalAlignment="Center" VerticalAlignment="Top"/>
@@ -156,8 +158,12 @@
                             <RowDefinition Height="0.5*"/>
                             <RowDefinition Height="0.5*"/>
                         </Grid.RowDefinitions>
+                        <Border Grid.Row="0" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
+                        <TextBlock VerticalAlignment="Top" Foreground="Snow" Text="Current&#10;Limit [mA]" HorizontalAlignment="Center" Margin="5"/>
+                        <xctk:DoubleUpDown MinHeight="20" MinWidth="60" Minimum="0" Maximum="4000" VerticalAlignment="Center" Margin="5" IsEnabled="{Binding IsChecked, ElementName=adjVP}" Increment="25" Value="{Binding ILIM_P}"/>
+                        <Button VerticalAlignment="Bottom" MinHeight="20" Content="Set" Command="{Binding CurrentLimitP}" Margin="10"/>
                         <Button Grid.Row="1" Margin="10" Background="#FF474A52" BorderBrush="Snow" ToolTip="Set V_Positive Voltage." Command="{Binding SetPositiveSupply}">
-                            <Grid >
+                            <Grid>
                                 <TextBlock Text="Set" FontSize="16" Foreground="Snow"/>
                             </Grid>
                         </Button>
@@ -187,6 +193,7 @@
                     <RowDefinition Height="0.2*"/>
                     <RowDefinition Height="0.3*"/>
                 </Grid.RowDefinitions>
+                <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="2"/>
                 <Rectangle Fill="#FF474A52"/>
                 <TextBlock Text="V_Negative" Foreground="Snow" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <Grid Grid.Row= "1">
@@ -204,7 +211,8 @@
                             <RowDefinition Height="0.4*"/>
                             <RowDefinition Height="0.5*"/>
                         </Grid.RowDefinitions>
-
+                        <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
+                        <Border Grid.Row="2" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
                         <CheckBox Name="adjVN" Content="Adjust&#10;Limits" Foreground="Snow" VerticalAlignment="Center" Margin="5"/>
 
                         <TextBlock Grid.Row="1" Text="Upper" Foreground="Snow" HorizontalAlignment="Center" VerticalAlignment="Top"/>
@@ -267,6 +275,10 @@
                             <RowDefinition Height="0.5*"/>
                             <RowDefinition Height="0.5*"/>
                         </Grid.RowDefinitions>
+                        <Border Grid.Row="0" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
+                        <TextBlock VerticalAlignment="Top" Foreground="Snow" Text="Current&#10;Limit [mA]" HorizontalAlignment="Center" Margin="5"/>
+                        <xctk:DoubleUpDown MinHeight="20" MinWidth="60" Minimum="0" Maximum="1000" VerticalAlignment="Center" Margin="5" IsEnabled="{Binding IsChecked, ElementName=adjVN}" Increment="25" Value="{Binding ILIM_N}"/>
+                        <Button VerticalAlignment="Bottom" MinHeight="20" Content="Set" Command="{Binding CurrentLimitN}" Margin="10"/>
                         <Button Grid.Row="1" Margin="10" Background="#FF474A52" BorderBrush="Snow" ToolTip="Set V_Negative Voltage." Command="{Binding SetNegativeSupply}">
                             <Grid >
                                 <TextBlock Text="Set" FontSize="16" Foreground="Snow"/>
@@ -298,6 +310,7 @@
                     <RowDefinition Height="0.2*"/>
                     <RowDefinition Height="0.3*"/>
                 </Grid.RowDefinitions>
+                <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="2"/>
                 <Rectangle Fill="#FF474A52"/>
                 <TextBlock Text="3V3" Foreground="Snow" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <Grid Grid.Row= "1">
@@ -315,7 +328,8 @@
                             <RowDefinition Height="0.4*"/>
                             <RowDefinition Height="0.5*"/>
                         </Grid.RowDefinitions>
-
+                        <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
+                        <Border Grid.Row="2" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
                         <CheckBox Content="Adjust&#10;Limits" Foreground="Snow" VerticalAlignment="Center" Margin="5" IsEnabled="False" ToolTip="Control disabled. Fixed Supply."/>
 
                         <TextBlock Grid.Row="1" Text="Upper" Foreground="Snow" HorizontalAlignment="Center" VerticalAlignment="Top"/>
@@ -403,6 +417,7 @@
                     <RowDefinition Height="0.2*"/>
                     <RowDefinition Height="0.3*"/>
                 </Grid.RowDefinitions>
+                <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="2"/>
                 <Rectangle Fill="#FF474A52"/>
                 <TextBlock Text="2V5" Foreground="Snow" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <Grid Grid.Row= "1">
@@ -420,7 +435,8 @@
                             <RowDefinition Height="0.4*"/>
                             <RowDefinition Height="0.5*"/>
                         </Grid.RowDefinitions>
-
+                        <Border Grid.Row="1" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
+                        <Border Grid.Row="2" BorderBrush="Lavender" BorderThickness="1.5" Grid.ColumnSpan="1" Grid.RowSpan="1"/>
                         <CheckBox Content="Adjust&#10;Limits" Foreground="Snow" VerticalAlignment="Center" Margin="5" IsEnabled="False" ToolTip="Control disabled. Fixed Supply."/>
 
                         <TextBlock Grid.Row="1" Text="Upper" Foreground="Snow" HorizontalAlignment="Center" VerticalAlignment="Top"/>
@@ -552,7 +568,7 @@
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <Button Background="LimeGreen" Margin="2" Content="Autoscale" ToolTip="Autoscale graph points."/>
+                <Button Background="LimeGreen" Margin="2" Content="Min/Max" ToolTip="Add min and max bars." Command="{Binding AddLimtsPositive}"/>
                 <Button Grid.Column="1" Background="LimeGreen" Margin="2" Content="Pop Out" ToolTip="Pop out graph to new window." Command="{Binding PopOutGraphPositive}"/>
                 <Button Grid.Column="2" Background="LimeGreen" Margin="2" Content="Save CSV" ToolTip="Save measurements to CSV file." Command="{Binding SaveVP}"/>
                 <Button Grid.Column="3" Background="LimeGreen" Margin="2" Content="Reset" ToolTip="Reset File Path and Clear Data." Command="{Binding ClearGraphPositive}"/>
@@ -571,7 +587,7 @@
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <Button Background="LimeGreen" Margin="2" Content="Autoscale" ToolTip="Autoscale graph points."/>
+                <Button Background="LimeGreen" Margin="2" Content="Min/Max" ToolTip="Add min and max bars." Command="{Binding AddLimtsNegative}"/>
                 <Button Grid.Column="1" Background="LimeGreen" Margin="2" Content="Pop Out" ToolTip="Pop out graph to new window." Command="{Binding PopOutGraphNegative}"/>
                 <Button Grid.Column="2" Background="LimeGreen" Margin="2" Content="Save CSV" ToolTip="Save measurements to CSV file." Command="{Binding SaveVN}"/>
                 <Button Grid.Column="3" Background="LimeGreen" Margin="2" Content="Reset" ToolTip="Reset File Path and Clear Data." Command="{Binding ClearGraphNegative}"/>
@@ -590,7 +606,7 @@
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <Button Background="LimeGreen" Margin="2" Content="Autoscale" ToolTip="Autoscale graph points."/>
+                <Button Background="LimeGreen" Margin="2" Content="Min/Max" ToolTip="Add min and max bars." Command="{Binding AddLimts3V3}"/>
                 <Button Grid.Column="1" Background="LimeGreen" Margin="2" Content="Pop Out" ToolTip="Pop out graph to new window." Command="{Binding PopOutGraph3V3}"/>
                 <Button Grid.Column="2" Background="LimeGreen" Margin="2" Content="Save CSV" ToolTip="Save measurements to CSV file." Command="{Binding SaveV3}"/>
                 <Button Grid.Column="3" Background="LimeGreen" Margin="2" Content="Reset" ToolTip="Reset File Path and Clear Data." Command="{Binding ClearGraph3V3}"/>
@@ -609,7 +625,7 @@
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <Button Background="LimeGreen" Margin="2" Content="Autoscale" ToolTip="Autoscale graph points."/>
+                <Button Background="LimeGreen" Margin="2" Content="Min/Max" ToolTip="Add min and max bars." Command="{Binding AddLimts2V5}"/>
                 <Button Grid.Column="1" Background="LimeGreen" Margin="2" Content="Pop Out" ToolTip="Pop out graph to new window." Command="{Binding PopOutGraph2V5}"/>
                 <Button Grid.Column="2" Background="LimeGreen" Margin="2" Content="Save CSV" ToolTip="Save measurements to CSV file." Command="{Binding SaveV2}"/>
                 <Button Grid.Column="3" Background="LimeGreen" Margin="2" Content="Reset" ToolTip="Reset File Path and Clear Data." Command="{Binding ClearGraph2V5}"/>

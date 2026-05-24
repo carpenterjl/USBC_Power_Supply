@@ -47,7 +47,7 @@ namespace Power_Supply_Control_WPF
             {
                 comboBoxPortsList.Items.Add(port);
             }
-            PSViewModel dataContext = new PSViewModel(powerService);
+            PSViewModel dataContext = new PSViewModel(powerService, this);
             dataContext.SelectedPortName = ports[0];
             dataContext.DeviceConnectedStatus = false;
 
@@ -267,6 +267,51 @@ namespace Power_Supply_Control_WPF
             else if (this.WindowState == WindowState.Normal)
             {
                 buttonMaximize.Content = "\uE922"; // Shows Maximize icon
+            }
+        }
+
+        public void addPlotLim(object Plot, double limLow, double limHigh)
+        {
+            switch (Plot)
+            {
+                case "P":
+                    foreach (HorizontalLine line in VPPlot.Plot.GetPlottables().OfType<HorizontalLine>().ToList())
+                    {
+                        VPPlot.Plot.Remove(line);
+                    }
+                    VPPlot.Plot.Add.HorizontalLine(limLow);
+                    VPPlot.Plot.Add.HorizontalLine(limHigh);
+                    VPPlot.Refresh();
+                    break;
+                case "N":
+                    foreach (HorizontalLine line in VNPlot.Plot.GetPlottables().OfType<HorizontalLine>().ToList())
+                    {
+                        VNPlot.Plot.Remove(line);
+                    }
+                    VNPlot.Plot.Add.HorizontalLine(limLow);
+                    VNPlot.Plot.Add.HorizontalLine(limHigh);
+                    VNPlot.Refresh();
+                    break;
+                case "3":
+                    foreach (HorizontalLine line in V3Plot.Plot.GetPlottables().OfType<HorizontalLine>().ToList())
+                    {
+                        V3Plot.Plot.Remove(line);
+                    }
+                    V3Plot.Plot.Add.HorizontalLine(limLow);
+                    V3Plot.Plot.Add.HorizontalLine(limHigh);
+                    V3Plot.Refresh();
+                    break;
+                case "2":
+                    foreach (HorizontalLine line in V2Plot.Plot.GetPlottables().OfType<HorizontalLine>().ToList())
+                    {
+                        V2Plot.Plot.Remove(line);
+                    }
+                    V2Plot.Plot.Add.HorizontalLine(limLow);
+                    V2Plot.Plot.Add.HorizontalLine(limHigh);
+                    V2Plot.Refresh();
+                    break;
+                default:
+                    return;
             }
         }
     }

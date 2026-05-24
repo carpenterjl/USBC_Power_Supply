@@ -33,6 +33,8 @@ namespace Power_Supply_Control_WPF.Services
             GETSTACK = 18,
             CONNECT = 19,
             DISCONNECT = 20,
+            SetILIMP = 21,
+            SetILIMN = 22,
         }
 
         public struct commands_Struct
@@ -268,6 +270,19 @@ namespace Power_Supply_Control_WPF.Services
                         case PowerCommand.GETSTACK:
                             cmd.Response?.SetResult(
                                 await _powerSupply.GetStackSpace((uint)cmd._value));
+                            break;
+
+                        /* ---------------------------
+                         * CURRENT LIMITING
+                         * --------------------------*/
+                        case PowerCommand.SetILIMN:
+                            cmd.Response?.SetResult(
+                                await _powerSupply.SetCurrentLimit((float)cmd._value, USB_Power_Supply_HW.Voltage_Sources.V_Negative));
+                            break;
+
+                        case PowerCommand.SetILIMP:
+                            cmd.Response?.SetResult(
+                                await _powerSupply.SetCurrentLimit((float)cmd._value, USB_Power_Supply_HW.Voltage_Sources.V_Positive));
                             break;
 
                         /* ---------------------------

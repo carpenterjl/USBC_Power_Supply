@@ -129,5 +129,15 @@ namespace Power_Supply_Control_WPF.Services
             }
             return current;
         }
+
+        public async Task<bool?> setIP(float current_Limit)
+        {
+            return (bool?)await _processor.Enqueue(PowerCommand.SetILIMP, current_Limit);
+        }
+
+        public async Task<bool?> setIN(float current_Limit)
+        {
+            return (bool?)await _processor.Enqueue(PowerCommand.SetILIMN, current_Limit);
+        }
     }
 }

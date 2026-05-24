@@ -56,6 +56,14 @@ namespace Power_Supply_Control_WPF
         public IAsyncRelayCommand PopOutGraph3V3 { get; }
         public IAsyncRelayCommand PopOutGraph2V5 { get; }
 
+        public IAsyncRelayCommand AddLimtsPositive { get; }
+        public IAsyncRelayCommand AddLimtsNegative { get; }
+        public IAsyncRelayCommand AddLimts3V3 { get; }
+        public IAsyncRelayCommand AddLimts2V5 { get; }
+
+        public IAsyncRelayCommand CurrentLimitP { get; }
+        public IAsyncRelayCommand CurrentLimitN { get; }
+
         public MeasurementRow SYSTEM;
         public MeasurementRow USB;
         public MeasurementRow V5;
@@ -67,10 +75,11 @@ namespace Power_Supply_Control_WPF
         System.Windows.Threading.DispatcherTimer timerAutoUpdate = new() { Interval = TimeSpan.FromMilliseconds(100) };
 
         private Power_Supply_Control_WPF.Services.AxisManager axisManager = new();
-
-        public PSViewModel(PowerSupplyService powerSupplyService)
+        private readonly MainWindow _mainWindow;
+        public PSViewModel(PowerSupplyService powerSupplyService, MainWindow main_window)
         {
             _powerSupplyService = powerSupplyService;
+            _mainWindow = main_window;
             ToggleVPCommand = new AsyncRelayCommand(ToggleVP);
             ToggleVNCommand = new AsyncRelayCommand(ToggleVN);
             ToggleV3V3Command = new AsyncRelayCommand(ToggleV3);
@@ -91,6 +100,12 @@ namespace Power_Supply_Control_WPF
             PopOutGraphNegative = new AsyncRelayCommand(PopOutGraphN);
             PopOutGraph3V3 = new AsyncRelayCommand(PopOutGraph3);
             PopOutGraph2V5 = new AsyncRelayCommand(PopOutGraph2);
+            AddLimtsPositive = new AsyncRelayCommand(AddPlotLimP);
+            AddLimtsNegative = new AsyncRelayCommand(AddPlotLimN);
+            AddLimts3V3 = new AsyncRelayCommand(AddPlotLim3);
+            AddLimts2V5 = new AsyncRelayCommand(AddPlotLim2);
+            CurrentLimitP = new AsyncRelayCommand(setILimP);
+            CurrentLimitN = new AsyncRelayCommand(setILimN);
 
             plotPositive = CreatePlot("Positive Supply");
             plotNegative = CreatePlot("Negative Supply");
@@ -130,6 +145,8 @@ namespace Power_Supply_Control_WPF
         private double VLIM_P_L = 0;
         private double VLIM_N_H = 0;
         private double VLIM_N_L = -20;
+        private double _currentLimP = 4000;
+        private double _currentLimN = 1000;
 
         private bool vpEnabled;
         private bool vnEnabled;
@@ -138,6 +155,32 @@ namespace Power_Supply_Control_WPF
 
         private bool? deviceConnected;
         private string? deviceCOMPort;
+
+        public double ILIM_P
+        {
+            get => _currentLimP;
+            set
+            {
+                if (_currentLimP != value)
+                {
+                    _currentLimP = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public double ILIM_N
+        {
+            get => _currentLimN;
+            set
+            {
+                if (_currentLimN != value)
+                {
+                    _currentLimN = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public double Voltage_Positive
         {
@@ -405,6 +448,22 @@ namespace Power_Supply_Control_WPF
             }
         }
 
+        private async Task setILimP()
+        {
+            if (deviceConnected == true)
+            {
+                await _powerSupplyService.setIP((float)_currentLimP);
+            }
+        }
+
+        private async Task setILimN()
+        {
+            if (deviceConnected == true)
+            {
+                await _powerSupplyService.setIN((float)_currentLimN);
+            }
+        }
+
         private int ReadIndex = 0;
         private async Task ReadNext()
         {
@@ -667,6 +726,62 @@ namespace Power_Supply_Control_WPF
             plot2V5.VoltageTrace.Clear();
             plot2V5.CurrentTrace.Clear();
             plot2V5.PowerTrace.Clear();
+            return Task.CompletedTask;
+        }
+
+        private Task AddPlotLimP()
+        {
+            foreach(PlotTrace signal in plotPositive.Traces)
+            {
+                if(signal.Visible)
+                {
+                    double max = signal.Logger.Data.Coordinates.Max(c => c.Y);
+                    double min = signal.Logger.Data.Coordinates.Min(c => c.Y);
+                    _mainWindow.addPlotLim("P", min, max);
+                }
+            }
+            return Task.CompletedTask;
+        }
+
+        private Task AddPlotLimN()
+        {
+            foreach (PlotTrace signal in plotNegative.Traces)
+            {
+                if (signal.Visible)
+                {
+                    double max = signal.Logger.Data.Coordinates.Max(c => c.Y);
+                    double min = signal.Logger.Data.Coordinates.Min(c => c.Y);
+                    _mainWindow.addPlotLim("N", min, max);
+                }
+            }
+            return Task.CompletedTask;
+        }
+
+        private Task AddPlotLim3()
+        {
+            foreach (PlotTrace signal in plot3V3.Traces)
+            {
+                if (signal.Visible)
+                {
+                    double max = signal.Logger.Data.Coordinates.Max(c => c.Y);
+                    double min = signal.Logger.Data.Coordinates.Min(c => c.Y);
+                    _mainWindow.addPlotLim("3", min, max);
+                }
+            }
+            return Task.CompletedTask;
+        }
+
+        private Task AddPlotLim2()
+        {
+            foreach (PlotTrace signal in plot2V5.Traces)
+            {
+                if (signal.Visible)
+                {
+                    double max = signal.Logger.Data.Coordinates.Max(c => c.Y);
+                    double min = signal.Logger.Data.Coordinates.Min(c => c.Y);
+                    _mainWindow.addPlotLim("2", min, max);
+                }
+            }
             return Task.CompletedTask;
         }
 

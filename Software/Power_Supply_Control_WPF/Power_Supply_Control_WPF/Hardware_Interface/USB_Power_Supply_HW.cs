@@ -226,5 +226,38 @@ namespace USB_Power_Supply_Application.Hardware_Interface
             }
             return response;
         }
+
+        public async Task<bool> SetCurrentLimit(float currentLimit, Voltage_Sources source)
+        {
+            string? response = null;
+            string command = "ILIM:";
+            if (_usbAdapter != null && _usbAdapter.isDeviceConnected)
+            {
+                switch(source)
+                {
+                    case Voltage_Sources.V_Positive:
+                        command += "P:";
+                        break;
+                    case Voltage_Sources.V_Negative:
+                        command += "N:";
+                        break;
+                    case Voltage_Sources.V_3v3:
+                        command += "3:";
+                        break;
+                    case Voltage_Sources.V_2v5:
+                        command += "2:";
+                        break;
+                    default: return false;
+                }
+                command += $"{currentLimit:F3}:";
+                response = await _usbAdapter.SendRawAsync(command);
+                if (response != null && response.Equals("OK"))
+                {
+                    return true;
+                }else
+                    return false;
+            }
+            return false;
+        }
     }
 }
