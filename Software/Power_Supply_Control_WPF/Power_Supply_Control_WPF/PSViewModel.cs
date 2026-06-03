@@ -20,6 +20,7 @@ namespace Power_Supply_Control_WPF
 {
     public class PSViewModel : INotifyPropertyChanged
     {
+        private bool ConsoleDebugMode = true;
         public event PropertyChangedEventHandler? PropertyChanged;
         private readonly PowerSupplyService _powerSupplyService;
         private bool autoUpdates = false;
@@ -366,12 +367,18 @@ namespace Power_Supply_Control_WPF
                     if (autoUpdates)
                     {
                         timerAutoUpdate.Start();
-                        Logger.Add(ConsoleMessage.LogLevel.Measurement, "App", "Updates started.");
+                        if(ConsoleDebugMode)
+                        {
+                            Logger.Add(ConsoleMessage.LogLevel.Measurement, "App", "Updates started.");
+                        }
                     }
                     else
                     {
                         timerAutoUpdate.Stop();
-                        Logger.Add(ConsoleMessage.LogLevel.Measurement, "App", "Updates stopped.");
+                        if (ConsoleDebugMode)
+                        {
+                            Logger.Add(ConsoleMessage.LogLevel.Measurement, "App", "Updates stopped.");
+                        }
                     }
                     OnPropertyChanged();
                 }
@@ -392,7 +399,15 @@ namespace Power_Supply_Control_WPF
         {
             if(deviceConnected == true)
             {
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Sent", $"VPos:{(VPEnabled ? "ENABLED" : "DISABLED")}");
+                }
                 VPEnabled = await _powerSupplyService.ToggleVP();
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Received", "");
+                }
                 Logger.Add(ConsoleMessage.LogLevel.Command, "Toggle", $"VPos:{(VPEnabled ? "ENABLED" : "DISABLED")}");
             }
         }
@@ -401,7 +416,15 @@ namespace Power_Supply_Control_WPF
         {
             if (deviceConnected == true)
             {
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Sent", $"VNeg:{(VPEnabled ? "ENABLED" : "DISABLED")}");
+                }
                 VNEnabled = await _powerSupplyService.ToggleVN();
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Received", "");
+                }
                 Logger.Add(ConsoleMessage.LogLevel.Command, "Toggle", $"VNeg:{(VNEnabled ? "ENABLED" : "DISABLED")}");
             }
         }
@@ -410,7 +433,15 @@ namespace Power_Supply_Control_WPF
         {
             if (deviceConnected == true)
             {
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Sent", $"V3.3:{(VPEnabled ? "ENABLED" : "DISABLED")}");
+                }
                 V3Enabled = await _powerSupplyService.ToggleV3();
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Received", "");
+                }
                 Logger.Add(ConsoleMessage.LogLevel.Command, "Toggle", $"V3.3:{(V3Enabled ? "ENABLED" : "DISABLED")}");
             }
         }
@@ -419,7 +450,15 @@ namespace Power_Supply_Control_WPF
         {
             if (deviceConnected == true)
             {
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Sent", $"V2.5:{(VPEnabled ? "ENABLED" : "DISABLED")}");
+                }
                 V2Enabled = await _powerSupplyService.ToggleV2();
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Received", "");
+                }
                 Logger.Add(ConsoleMessage.LogLevel.Command, "Toggle", $"V2.5:{(V2Enabled ? "ENABLED" : "DISABLED")}");
             }
         }
@@ -428,7 +467,15 @@ namespace Power_Supply_Control_WPF
         {
             if (deviceConnected == true)
             {
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Sent", $"VPSET");
+                }
                 await _powerSupplyService.SetVP((float)_voltagePositive);
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Received", "");
+                }
                 Logger.Add(ConsoleMessage.LogLevel.Command, "Config", $"VPos;V Set to: {(float)_voltagePositive:F3} Volts");
             }
         }
@@ -445,7 +492,15 @@ namespace Power_Supply_Control_WPF
         {
             if (deviceConnected == true)
             {
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Sent", $"VNSET");
+                }
                 await _powerSupplyService.SetVN((float)_voltageNegative);
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Received", "");
+                }
                 Logger.Add(ConsoleMessage.LogLevel.Command, "Config", $"VNeg;V Set to: {(float)_voltagePositive:F3} Volts");
             }
         }
@@ -478,7 +533,15 @@ namespace Power_Supply_Control_WPF
         {
             if (deviceConnected == true)
             {
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Sent", $"IPSET");
+                }
                 await _powerSupplyService.setIP((float)_currentLimP);
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Received", "");
+                }
                 Logger.Add(ConsoleMessage.LogLevel.Command, "Config", $"VPos;Current Limit Set to: {(float)_currentLimP:F3} mA");
             }
         }
@@ -487,7 +550,15 @@ namespace Power_Supply_Control_WPF
         {
             if (deviceConnected == true)
             {
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Sent", $"INSET");
+                }
                 await _powerSupplyService.setIN((float)_currentLimN);
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Received", "");
+                }
                 Logger.Add(ConsoleMessage.LogLevel.Command, "Config", $"VNeg;Current Limit Set to: {(float)_currentLimN:F3} mA");
             }
         }
@@ -527,7 +598,15 @@ namespace Power_Supply_Control_WPF
 
             if (deviceConnected == false)
             {
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "App", "Connecting to " + deviceCOMPort);
+                }
                 bool? Connected = await _powerSupplyService.ConnectToDevice(deviceCOMPort);
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, deviceCOMPort, $"{(Connected == true ? "Conncted" : "Error")}");
+                }
                 this.DeviceConnectedStatus = Connected == true;
                 Logger.Add(ConsoleMessage.LogLevel.Info, "App", "Device Connected.");
             }
@@ -555,8 +634,16 @@ namespace Power_Supply_Control_WPF
             {
                 _isUpdating = true;
                 if(startMeasTime == DateTime.MinValue) startMeasTime = DateTime.Now;
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Updating", "VP,IP");
+                }
                 float vp = (float)await _powerSupplyService.ReadVPVoltage();
                 float ip = (float)await _powerSupplyService.ReadCurrent(USB_Power_Supply_Application.Hardware_Interface.USB_Power_Supply_HW.Current_Sources.I_Positive);
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Response", "VP,IP");
+                }
                 float pp = vp * ip;
                 MeasurementSample sp = new() { Timestamp = DateTime.Now, Voltage = vp, Current = ip, Power = pp, };
                 dataSourcePositiveSupply.Add(sp);
@@ -568,13 +655,19 @@ namespace Power_Supply_Control_WPF
                     plotPositive.Traces[0].AddPoint(t, vp);
                     plotPositive.Traces[1].AddPoint(t, ip);
                     plotPositive.Traces[2].AddPoint(t, pp);
-
                 }
                 VP.Voltage = vp;
                 VP.Current = ip;
-
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Updating", "VN,IN");
+                }
                 float vn = (float)await _powerSupplyService.ReadVNVoltage();
                 float ineg = (float)await _powerSupplyService.ReadCurrent(USB_Power_Supply_Application.Hardware_Interface.USB_Power_Supply_HW.Current_Sources.I_Negative);
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Response", "VN,IN");
+                }
                 float pn = vn * ineg;
                 MeasurementSample sn = new() { Timestamp = DateTime.Now, Voltage = vn, Current = ineg, Power = pn };
                 dataSourceNegativeSupply.Add(sn);
@@ -588,9 +681,16 @@ namespace Power_Supply_Control_WPF
                 }
                 VN.Voltage = vn;
                 VN.Current = ineg;
-
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Updating", "V3,I3");
+                }
                 float v3 = (float)await _powerSupplyService.ReadV3Voltage();
                 float i3 = (float)await _powerSupplyService.ReadCurrent(USB_Power_Supply_Application.Hardware_Interface.USB_Power_Supply_HW.Current_Sources.I_3v3);
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Response", "V3,I3");
+                }
                 float p3 = v3 * i3;
                 MeasurementSample s3 = new() { Timestamp = DateTime.Now, Voltage = v3, Current = i3, Power = p3 };
                 dataSource3V3Supply.Add(s3);
@@ -604,9 +704,16 @@ namespace Power_Supply_Control_WPF
                 }
                 V33.Voltage = v3;
                 V33.Current = i3;
-
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Updating", "V2,I2");
+                }
                 float v2 = (float)await _powerSupplyService.ReadV2Voltage();
                 float i2 = (float)await _powerSupplyService.ReadCurrent(USB_Power_Supply_Application.Hardware_Interface.USB_Power_Supply_HW.Current_Sources.I_2v5);
+                if (ConsoleDebugMode)
+                {
+                    Logger.Add(ConsoleMessage.LogLevel.Debug, "Response", "V2,I2");
+                }
                 float p2 = v2 * i2;
                 MeasurementSample s2 = new() { Timestamp = DateTime.Now, Voltage = v2, Current = i2, Power = p2 };
                 dataSource2V5Supply.Add(s2);

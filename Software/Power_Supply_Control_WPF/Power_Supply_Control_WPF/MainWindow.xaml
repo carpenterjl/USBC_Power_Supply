@@ -10,10 +10,11 @@
         mc:Ignorable="d"
         WindowStyle="None"
         StateChanged="Window_StateChanged"
-        Title="MainWindow" MinHeight="724" MinWidth="1843" WindowStartupLocation="CenterScreen">
+        Title="MainWindow" Width="1920" Height="1080" WindowStartupLocation="CenterScreen">
     
     <!-- Main Form Grid Layout -->
-    <Grid Background="#FF2F3136">
+    <Viewbox Stretch="Fill">
+    <Grid Background="#FF2F3136" Width="1920" Height="1080">
         <Grid.RowDefinitions>
             <RowDefinition Height="70"/>
             <RowDefinition/>
@@ -670,5 +671,5 @@
         </Grid>
         
     </Grid>
-    
+    </Viewbox>
 </Window>

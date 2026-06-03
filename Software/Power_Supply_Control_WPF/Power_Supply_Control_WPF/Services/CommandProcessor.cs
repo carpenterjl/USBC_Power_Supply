@@ -83,7 +83,7 @@ namespace Power_Supply_Control_WPF.Services
         {
             while (true)
             {
-                if (_commandChannel.Reader.TryRead(out commands_Struct cmd))
+                await foreach (commands_Struct cmd in _commandChannel.Reader.ReadAllAsync())
                 {
                     switch (cmd._cmd)
                     {
@@ -293,7 +293,7 @@ namespace Power_Supply_Control_WPF.Services
                             break;
                     }
                 }
-                await Task.Delay(5);
+                //await Task.Delay(5);
             }
         }
     }
