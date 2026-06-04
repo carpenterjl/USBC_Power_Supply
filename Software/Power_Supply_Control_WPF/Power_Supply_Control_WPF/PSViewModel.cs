@@ -620,6 +620,9 @@ namespace Power_Supply_Control_WPF
 
         private bool _isUpdating = false;
         static DateTime startMeasTime = DateTime.MinValue;
+        static DateTime startMeasTime2 = DateTime.MinValue;
+        static DateTime startMeasTime3 = DateTime.MinValue;
+        static DateTime startMeasTime4 = DateTime.MinValue;
         private async Task UpdateMeasurements()
         {
             if (deviceCOMPort == null) return;
@@ -658,6 +661,7 @@ namespace Power_Supply_Control_WPF
                 }
                 VP.Voltage = vp;
                 VP.Current = ip;
+                if (startMeasTime2 == DateTime.MinValue) startMeasTime2 = DateTime.Now;
                 if (ConsoleDebugMode)
                 {
                     Logger.Add(ConsoleMessage.LogLevel.Debug, "Updating", "VN,IN");
@@ -671,7 +675,7 @@ namespace Power_Supply_Control_WPF
                 float pn = vn * ineg;
                 MeasurementSample sn = new() { Timestamp = DateTime.Now, Voltage = vn, Current = ineg, Power = pn };
                 dataSourceNegativeSupply.Add(sn);
-                duration = DateTime.Now - startMeasTime;
+                duration = DateTime.Now - startMeasTime2;
                 t = duration.TotalMilliseconds;
                 if (plotNegative.Traces[0].Visible || plotNegative.Traces[1].Visible || plotNegative.Traces[2].Visible)
                 {
@@ -681,6 +685,7 @@ namespace Power_Supply_Control_WPF
                 }
                 VN.Voltage = vn;
                 VN.Current = ineg;
+                if (startMeasTime3 == DateTime.MinValue) startMeasTime3 = DateTime.Now;
                 if (ConsoleDebugMode)
                 {
                     Logger.Add(ConsoleMessage.LogLevel.Debug, "Updating", "V3,I3");
@@ -694,7 +699,7 @@ namespace Power_Supply_Control_WPF
                 float p3 = v3 * i3;
                 MeasurementSample s3 = new() { Timestamp = DateTime.Now, Voltage = v3, Current = i3, Power = p3 };
                 dataSource3V3Supply.Add(s3);
-                duration = DateTime.Now - startMeasTime;
+                duration = DateTime.Now - startMeasTime3;
                 t = duration.TotalMilliseconds;
                 if (plot3V3.Traces[0].Visible || plot3V3.Traces[1].Visible || plot3V3.Traces[2].Visible)
                 {
@@ -704,6 +709,7 @@ namespace Power_Supply_Control_WPF
                 }
                 V33.Voltage = v3;
                 V33.Current = i3;
+                if (startMeasTime4 == DateTime.MinValue) startMeasTime4 = DateTime.Now;
                 if (ConsoleDebugMode)
                 {
                     Logger.Add(ConsoleMessage.LogLevel.Debug, "Updating", "V2,I2");
@@ -717,7 +723,7 @@ namespace Power_Supply_Control_WPF
                 float p2 = v2 * i2;
                 MeasurementSample s2 = new() { Timestamp = DateTime.Now, Voltage = v2, Current = i2, Power = p2 };
                 dataSource2V5Supply.Add(s2);
-                duration = DateTime.Now - startMeasTime;
+                duration = DateTime.Now - startMeasTime4;
                 t = duration.TotalMilliseconds;
                 if (plot2V5.Traces[0].Visible || plot2V5.Traces[1].Visible || plot2V5.Traces[2].Visible)
                 {
@@ -855,6 +861,7 @@ namespace Power_Supply_Control_WPF
 
         private Task ClearGraphP()
         {
+            startMeasTime = DateTime.MinValue;
             plotPositive.VoltageTrace.Clear();
             plotPositive.CurrentTrace.Clear();
             plotPositive.PowerTrace.Clear();
@@ -864,6 +871,7 @@ namespace Power_Supply_Control_WPF
 
         private Task ClearGraphN()
         {
+            startMeasTime2 = DateTime.MinValue;
             plotNegative.VoltageTrace.Clear();
             plotNegative.CurrentTrace.Clear();
             plotNegative.PowerTrace.Clear();
@@ -873,6 +881,7 @@ namespace Power_Supply_Control_WPF
 
         private Task ClearGraph3()
         {
+            startMeasTime3 = DateTime.MinValue;
             plot3V3.VoltageTrace.Clear();
             plot3V3.CurrentTrace.Clear();
             plot3V3.PowerTrace.Clear();
@@ -882,6 +891,7 @@ namespace Power_Supply_Control_WPF
 
         private Task ClearGraph2()
         {
+            startMeasTime4 = DateTime.MinValue;
             plot2V5.VoltageTrace.Clear();
             plot2V5.CurrentTrace.Clear();
             plot2V5.PowerTrace.Clear();

@@ -1,14 +1,18 @@
-﻿using Power_Supply_Control_WPF.GUI_Elements;
+﻿using OpenTK.Windowing.Desktop;
+using Power_Supply_Control_WPF.GUI_Elements;
 using Power_Supply_Control_WPF.Services;
 using ScottPlot;
 using ScottPlot.Plottables;
+using System.IO;
 using System.IO.Ports;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -27,181 +31,194 @@ namespace Power_Supply_Control_WPF
         private Power_Supply_Control_WPF.Services.AxisManager axisManager = new();
         public MainWindow()
         {
-            InitializeComponent();
-
-            ISERIAL serial = new Serial();
-
-            IUsbAdapterDevice adapter = new USB_Adapter_HW(serial);
-
-            USB_Power_Supply_HW hw = new USB_Power_Supply_HW(adapter);
-
-            CommandProcessor processor = new CommandProcessor(hw);
-
-            ConsoleLogger consoleLogger = new ConsoleLogger();
-
-            PowerSupplyService powerService = new PowerSupplyService(processor);
-
-            comboBoxPortsList.Items.Clear();
-
-            string[] ports = SerialPort.GetPortNames();
-
-            foreach(string port in ports)
+            try
             {
-                comboBoxPortsList.Items.Add(port);
-            }
-            PSViewModel dataContext = new PSViewModel(powerService, this, consoleLogger);
-            dataContext.SelectedPortName = ports[0];
-            dataContext.DeviceConnectedStatus = false;
+                InitializeComponent();
 
-            var adjAxis = VPPlot.Plot.Axes.GetYAxes();
-            adjAxis.First().IsVisible = false;
-            adjAxis = VNPlot.Plot.Axes.GetYAxes();
-            adjAxis.First().IsVisible = false;
-            adjAxis = V3Plot.Plot.Axes.GetYAxes();
-            adjAxis.First().IsVisible = false;
-            adjAxis = V2Plot.Plot.Axes.GetYAxes();
-            adjAxis.First().IsVisible = false;
+                this.SizeChanged += Window_SizeChanged;
 
-            foreach (PlotTrace signal in dataContext.plotPositive.Traces)
-            {
-                DataLogger logger = VPPlot.Plot.Add.DataLogger();
-                var axisY = VPPlot.Plot.Axes.AddLeftAxis();
-                axisY.LabelText = signal.Name;
-                axisY.IsVisible = signal.Visible;
-                logger.IsVisible = signal.Visible;
-                logger.Axes.YAxis = axisY;
-                logger.LegendText = signal.Name;
-                logger.Axes.YAxis.IsVisible = signal.Visible;
-                logger.Color = signal.TraceColor;
-                logger.ManageAxisLimits = true;
-                logger.AxisManager = axisManager;
-                signal.Logger = logger;
-                signal.PropertyChanged +=
-                (s, e) =>
+                ISERIAL serial = new Serial();
+
+                IUsbAdapterDevice adapter = new USB_Adapter_HW(serial);
+
+                USB_Power_Supply_HW hw = new USB_Power_Supply_HW(adapter);
+
+                CommandProcessor processor = new CommandProcessor(hw);
+
+                ConsoleLogger consoleLogger = new ConsoleLogger();
+
+                PowerSupplyService powerService = new PowerSupplyService(processor);
+
+                comboBoxPortsList.Items.Clear();
+
+                string[] ports = SerialPort.GetPortNames();
+
+                foreach (string port in ports)
                 {
-                    if (e.PropertyName == nameof(PlotTrace.Visible))
-                    {
-                        logger.Axes.YAxis.IsVisible = signal.Visible;
-                        logger.IsVisible = signal.Visible;
-                        VPPlot.Refresh();
-                    }
-                };
-                
-            }
-
-            foreach (PlotTrace signal in dataContext.plotNegative.Traces)
-            {
-                DataLogger logger = VNPlot.Plot.Add.DataLogger();
-                var axisY = VNPlot.Plot.Axes.AddLeftAxis();
-                axisY.LabelText = signal.Name;
-                axisY.IsVisible = signal.Visible;
-                logger.IsVisible = signal.Visible;
-                logger.Axes.YAxis = axisY;
-                logger.LegendText = signal.Name;
-                logger.Axes.YAxis.IsVisible = signal.Visible;
-                logger.Color = signal.TraceColor;
-                logger.ManageAxisLimits = true;
-                logger.AxisManager = axisManager;
-                signal.Logger = logger;
-                signal.PropertyChanged +=
-                (s, e) =>
+                    comboBoxPortsList.Items.Add(port);
+                }
+                PSViewModel dataContext = new PSViewModel(powerService, this, consoleLogger);
+                if (ports.Length > 0)
                 {
-                    if (e.PropertyName == nameof(PlotTrace.Visible))
-                    {
-                        logger.Axes.YAxis.IsVisible = signal.Visible;
-                        logger.IsVisible = signal.Visible;
-                        VNPlot.Refresh();
-                    }
-                };
-            }
+                    dataContext.SelectedPortName = ports[0];
+                }
+                dataContext.DeviceConnectedStatus = false;
 
-            foreach (PlotTrace signal in dataContext.plot3V3.Traces)
-            {
-                DataLogger logger = V3Plot.Plot.Add.DataLogger();
-                var axisY = V3Plot.Plot.Axes.AddLeftAxis();
-                axisY.LabelText = signal.Name;
-                axisY.LabelText = signal.Name;
-                axisY.IsVisible = signal.Visible;
-                logger.IsVisible = signal.Visible;
-                logger.Axes.YAxis = axisY;
-                logger.LegendText = signal.Name;
-                logger.Axes.YAxis.IsVisible = signal.Visible;
-                logger.Color = signal.TraceColor;
-                logger.ManageAxisLimits = true;
-                logger.AxisManager = axisManager;
-                signal.Logger = logger;
-                signal.PropertyChanged +=
-                (s, e) =>
+                var adjAxis = VPPlot.Plot.Axes.GetYAxes();
+                adjAxis.First().IsVisible = false;
+                adjAxis = VNPlot.Plot.Axes.GetYAxes();
+                adjAxis.First().IsVisible = false;
+                adjAxis = V3Plot.Plot.Axes.GetYAxes();
+                adjAxis.First().IsVisible = false;
+                adjAxis = V2Plot.Plot.Axes.GetYAxes();
+                adjAxis.First().IsVisible = false;
+
+                foreach (PlotTrace signal in dataContext.plotPositive.Traces)
                 {
-                    if (e.PropertyName == nameof(PlotTrace.Visible))
+                    DataLogger logger = VPPlot.Plot.Add.DataLogger();
+                    var axisY = VPPlot.Plot.Axes.AddLeftAxis();
+                    axisY.LabelText = signal.Name;
+                    axisY.IsVisible = signal.Visible;
+                    logger.IsVisible = signal.Visible;
+                    logger.Axes.YAxis = axisY;
+                    logger.LegendText = signal.Name;
+                    logger.Axes.YAxis.IsVisible = signal.Visible;
+                    logger.Color = signal.TraceColor;
+                    logger.ManageAxisLimits = true;
+                    logger.AxisManager = axisManager;
+                    signal.Logger = logger;
+                    signal.PropertyChanged +=
+                    (s, e) =>
                     {
-                        logger.Axes.YAxis.IsVisible = signal.Visible;
-                        logger.IsVisible = signal.Visible;
-                        V3Plot.Refresh();
-                    }
-                };
-            }
+                        if (e.PropertyName == nameof(PlotTrace.Visible))
+                        {
+                            logger.Axes.YAxis.IsVisible = signal.Visible;
+                            logger.IsVisible = signal.Visible;
+                            VPPlot.Refresh();
+                        }
+                    };
 
-            foreach (PlotTrace signal in dataContext.plot2V5.Traces)
-            {
-                DataLogger logger = V2Plot.Plot.Add.DataLogger();
-                var axisY = V2Plot.Plot.Axes.AddLeftAxis();
-                axisY.LabelText = signal.Name;
-                axisY.LabelText = signal.Name;
-                axisY.IsVisible = signal.Visible;
-                logger.IsVisible = signal.Visible;
-                logger.Axes.YAxis = axisY;
-                logger.LegendText = signal.Name;
-                logger.Axes.YAxis.IsVisible = signal.Visible;
-                logger.Color = signal.TraceColor;
-                logger.ManageAxisLimits = true;
-                logger.AxisManager = axisManager;
-                signal.Logger = logger;
-                signal.PropertyChanged +=
-                (s, e) =>
+                }
+
+                foreach (PlotTrace signal in dataContext.plotNegative.Traces)
                 {
-                    if (e.PropertyName == nameof(PlotTrace.Visible))
+                    DataLogger logger = VNPlot.Plot.Add.DataLogger();
+                    var axisY = VNPlot.Plot.Axes.AddLeftAxis();
+                    axisY.LabelText = signal.Name;
+                    axisY.IsVisible = signal.Visible;
+                    logger.IsVisible = signal.Visible;
+                    logger.Axes.YAxis = axisY;
+                    logger.LegendText = signal.Name;
+                    logger.Axes.YAxis.IsVisible = signal.Visible;
+                    logger.Color = signal.TraceColor;
+                    logger.ManageAxisLimits = true;
+                    logger.AxisManager = axisManager;
+                    signal.Logger = logger;
+                    signal.PropertyChanged +=
+                    (s, e) =>
                     {
-                        logger.Axes.YAxis.IsVisible = signal.Visible;
-                        logger.IsVisible = signal.Visible;
-                        V2Plot.Refresh();
-                    }
-                };
-            }
-            
-            VPPlot.UserInputProcessor.Disable();
-            VNPlot.UserInputProcessor.Disable();
-            V3Plot.UserInputProcessor.Disable();
-            V2Plot.UserInputProcessor.Disable();
+                        if (e.PropertyName == nameof(PlotTrace.Visible))
+                        {
+                            logger.Axes.YAxis.IsVisible = signal.Visible;
+                            logger.IsVisible = signal.Visible;
+                            VNPlot.Refresh();
+                        }
+                    };
+                }
 
-            VPPlot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
-            V3Plot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
-            V2Plot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
-            VNPlot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
+                foreach (PlotTrace signal in dataContext.plot3V3.Traces)
+                {
+                    DataLogger logger = V3Plot.Plot.Add.DataLogger();
+                    var axisY = V3Plot.Plot.Axes.AddLeftAxis();
+                    axisY.LabelText = signal.Name;
+                    axisY.LabelText = signal.Name;
+                    axisY.IsVisible = signal.Visible;
+                    logger.IsVisible = signal.Visible;
+                    logger.Axes.YAxis = axisY;
+                    logger.LegendText = signal.Name;
+                    logger.Axes.YAxis.IsVisible = signal.Visible;
+                    logger.Color = signal.TraceColor;
+                    logger.ManageAxisLimits = true;
+                    logger.AxisManager = axisManager;
+                    signal.Logger = logger;
+                    signal.PropertyChanged +=
+                    (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(PlotTrace.Visible))
+                        {
+                            logger.Axes.YAxis.IsVisible = signal.Visible;
+                            logger.IsVisible = signal.Visible;
+                            V3Plot.Refresh();
+                        }
+                    };
+                }
 
-            VPPlot.Refresh();
-            VNPlot.Refresh();
-            V3Plot.Refresh();
-            V2Plot.Refresh();
+                foreach (PlotTrace signal in dataContext.plot2V5.Traces)
+                {
+                    DataLogger logger = V2Plot.Plot.Add.DataLogger();
+                    var axisY = V2Plot.Plot.Axes.AddLeftAxis();
+                    axisY.LabelText = signal.Name;
+                    axisY.LabelText = signal.Name;
+                    axisY.IsVisible = signal.Visible;
+                    logger.IsVisible = signal.Visible;
+                    logger.Axes.YAxis = axisY;
+                    logger.LegendText = signal.Name;
+                    logger.Axes.YAxis.IsVisible = signal.Visible;
+                    logger.Color = signal.TraceColor;
+                    logger.ManageAxisLimits = true;
+                    logger.AxisManager = axisManager;
+                    signal.Logger = logger;
+                    signal.PropertyChanged +=
+                    (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(PlotTrace.Visible))
+                        {
+                            logger.Axes.YAxis.IsVisible = signal.Visible;
+                            logger.IsVisible = signal.Visible;
+                            V2Plot.Refresh();
+                        }
+                    };
+                }
 
-            VPPlot.Plot.Axes.ContinuouslyAutoscale = true;
-            VNPlot.Plot.Axes.ContinuouslyAutoscale = true;
-            V3Plot.Plot.Axes.ContinuouslyAutoscale = true;
-            V2Plot.Plot.Axes.ContinuouslyAutoscale = true;
+                VPPlot.UserInputProcessor.Disable();
+                VNPlot.UserInputProcessor.Disable();
+                V3Plot.UserInputProcessor.Disable();
+                V2Plot.UserInputProcessor.Disable();
 
-            timerUpdate.Tick += (s, e) =>
-            {
+                VPPlot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
+                V3Plot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
+                V2Plot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
+                VNPlot.Plot.ShowLegend(ScottPlot.Alignment.UpperRight);
+
                 VPPlot.Refresh();
                 VNPlot.Refresh();
                 V3Plot.Refresh();
                 V2Plot.Refresh();
-            };
 
-            timerUpdate.Start();
+                VPPlot.Plot.Axes.ContinuouslyAutoscale = true;
+                VNPlot.Plot.Axes.ContinuouslyAutoscale = true;
+                V3Plot.Plot.Axes.ContinuouslyAutoscale = true;
+                V2Plot.Plot.Axes.ContinuouslyAutoscale = true;
 
-            this.DataContext = dataContext;
+                timerUpdate.Tick += (s, e) =>
+                {
+                    VPPlot.Refresh();
+                    VNPlot.Refresh();
+                    V3Plot.Refresh();
+                    V2Plot.Refresh();
+                };
 
-            dataContext.Logger.Add(ConsoleMessage.LogLevel.Info, "App", "Application Loaded.");
+                timerUpdate.Start();
+
+                this.DataContext = dataContext;
+
+                dataContext.Logger.Add(ConsoleMessage.LogLevel.Info, "App", "Application Loaded.");
+            }
+            catch(Exception ex)
+            {
+                File.WriteAllText("crash.txt", ex.ToString());
+                throw;
+            }
         }
 
         private void buttonExit_Click(object sender, RoutedEventArgs e)
@@ -213,22 +230,31 @@ namespace Power_Supply_Control_WPF
         {
             if (e.ChangedButton == MouseButton.Left)
             {
+                if (e.ClickCount == 2)
+                {
+                    WindowState = WindowState == WindowState.Maximized
+                        ? WindowState.Normal
+                        : WindowState.Maximized;
+
+                    return;
+                }
+
                 if (this.WindowState == WindowState.Maximized)
                 {
-                    // Get current mouse position relative to the screen
-                    Point mousePos = PointToScreen(e.GetPosition(this));
+                    Point mouseScreen = PointToScreen(e.GetPosition(this));
 
-                    // Calculate relative horizontal position to prevent window jumping
-                    double resumeWidth = this.RestoreBounds.Width;
-                    double relativeX = mousePos.X / SystemParameters.PrimaryScreenWidth;
-                    double relativeY = mousePos.Y / SystemParameters.PrimaryScreenHeight;
+                    double restoreWidth = RestoreBounds.Width;
+                    double restoreHeight = RestoreBounds.Height;
 
-                    // Restore window state
-                    this.WindowState = WindowState.Normal;
+                    // Horizontal position of mouse within maximized window
+                    double percentX = e.GetPosition(this).X / ActualWidth;
 
-                    // Reposition window under the mouse cursor
-                    this.Left = mousePos.X - (resumeWidth * relativeX);
-                    this.Top = relativeY; // Slight offset for the title bar
+                    WindowState = WindowState.Normal;
+
+                    Left = mouseScreen.X - (restoreWidth * percentX);
+
+                    // Keep mouse on title bar after restore
+                    Top = mouseScreen.Y - 20;
                 }
 
                 this.DragMove();
@@ -349,6 +375,83 @@ namespace Power_Supply_Control_WPF
                 default:
                     return;
             }
+        }
+
+        //Code below added for compatibility with lower resolution displays, will start in full-screen mode if resolution is <= 1920x1080
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var area = GetCurrentMonitorWorkArea(this);
+
+                if (area.Width <= 1920 || area.Height <= 1080)
+                {
+                    WindowState = WindowState.Maximized;
+                }
+            }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct RECT
+        {
+            public int Left, Top, Right, Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        internal struct MONITORINFO
+        {
+            public int cbSize;
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public int dwFlags;
+        }
+
+        internal static class NativeMethods
+        {
+            [DllImport("user32.dll")]
+            public static extern IntPtr MonitorFromWindow(IntPtr hwnd, int dwFlags);
+
+            [DllImport("user32.dll", CharSet = CharSet.Auto)]
+            public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+        }
+
+        public static Rect GetCurrentMonitorWorkArea(Window window)
+        {
+            var hwnd = new WindowInteropHelper(window).Handle;
+
+            const int MONITOR_DEFAULTTONEAREST = 2;
+
+            IntPtr monitor = NativeMethods.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
+            MONITORINFO info = new MONITORINFO();
+            info.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
+
+            NativeMethods.GetMonitorInfo(monitor, ref info);
+
+            return new Rect(
+                info.rcWork.Left,
+                info.rcWork.Top,
+                info.rcWork.Right - info.rcWork.Left,
+                info.rcWork.Bottom - info.rcWork.Top
+            );
+        }
+
+        private const double AspectRatio = 1920.0 / 1080.0;
+
+        private bool _resizing;
+
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (_resizing)
+                return;
+
+            _resizing = true;
+
+            Width = Height * AspectRatio;
+
+            _resizing = false;
         }
     }
 }
