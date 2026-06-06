@@ -55,7 +55,7 @@ void StartDefaultTask(void *argument)
 	  STACK_SIZE_REMAINING[3] = osThreadGetStackSpace(vMeasureTaskHandle);
 	  STACK_SIZE_REMAINING[4] = osThreadGetStackSpace(iMeasureTaskHandle);
 	  STACK_SIZE_REMAINING[5] = osThreadGetStackSpace(cmdResponseTaskHandle);
-    osDelay(1);
+    osDelay(10);
   }
 
   //Terminate task in case of exit of main while loop

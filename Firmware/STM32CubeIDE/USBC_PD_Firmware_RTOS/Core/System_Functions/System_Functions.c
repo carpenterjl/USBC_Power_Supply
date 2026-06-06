@@ -423,40 +423,53 @@ void ProcessCurrentLimit(float current_mA)
 {
 #define IP_LIM_mA Power_Supply_Settings.ILIM_POSITIVE
 #define KI_GAIN		0.001
-#define KP_GAIN		0.0005
+#define KP_GAIN		0.008
+#define CURRENT_THRESHOLD_P 10.0f
+#define ERROR_DEADBAND_mA 3.0f
 
+	static float e_prev = 0.0f;
     static float integral_error = 0.0f;
     static float last_v_set = 0.0f;
-    float current_error = current_mA - IP_LIM_mA;
 	static uint8_t CURRENT_LIMITING_P = 0;
-	float MAX_I_REG = Power_Supply_Settings.V_SET_POSITIVE - 2.5f;
+	static float current_filtered = 0;
+
 	if(last_v_set != Power_Supply_Settings.V_SET_POSITIVE)
 	{
 		last_v_set = Power_Supply_Settings.V_SET_POSITIVE;
 		integral_error = 0;
+		e_prev = 0;
+		current_filtered = current_mA;
+		CURRENT_LIMITING_P = 0;
 	}
-    if (current_error > 0.0f || CURRENT_LIMITING_P)
+	current_filtered += 0.1f * (current_mA - current_filtered);
+	float current_error = current_filtered - IP_LIM_mA;
+	if(current_filtered < 0.01) CURRENT_LIMITING_P = 0;
+    if (current_error > CURRENT_THRESHOLD_P || CURRENT_LIMITING_P)
     {
-        // 1. We are over-current, or recovering from it
+    	float MAX_I_REG = Power_Supply_Settings.V_SET_POSITIVE - 2.0f;
+
         CURRENT_LIMITING_P = 1;
 
-        // 2. Accumulate integral error (with anti-windup protection)
-        integral_error += current_error * KI_GAIN;
+        if (fabsf(current_error < ERROR_DEADBAND_mA))
+        {
+            current_error = 0.0f;
+        }
+
+        integral_error += ( current_error + e_prev ) * KI_GAIN * 0.5;
         if (integral_error > MAX_I_REG) integral_error = MAX_I_REG;
         if (integral_error < 0.0f) integral_error = 0.0f;
 
-        // 3. Compute total voltage reduction (P + I)
+        //Compute total voltage reduction (P + I)
         float v_reduction = (current_error * KP_GAIN) + integral_error;
-
-        // 4. Calculate new target voltage
         float v_target = Power_Supply_Settings.V_SET_POSITIVE - v_reduction;
 
-        // 5. Check safety boundaries
-        if (v_target <= 2.5f)
+        //Check safety boundaries
+        if (v_target <= 2.0f)
         {
             DisableOutput(V_Positive);
             integral_error = 0.0f;
             CURRENT_LIMITING_P = 0;
+            e_prev = 0;
         }
         else if (v_target >= Power_Supply_Settings.V_SET_POSITIVE)
         {
@@ -464,11 +477,13 @@ void ProcessCurrentLimit(float current_mA)
             SetPositiveSupply(Power_Supply_Settings.V_SET_POSITIVE, 0);
             integral_error = 0.0f;
             CURRENT_LIMITING_P = 0;
+            e_prev = 0;
         }
         else
         {
             // Apply the smoothly throttled voltage
             SetPositiveSupply(v_target, 0);
+            e_prev = current_error;
         }
     }
 }
@@ -476,53 +491,67 @@ void ProcessCurrentLimit(float current_mA)
 void ProcessCurrentLimitN(float current_mA)
 {
 #define IN_LIM_mA 	Power_Supply_Settings.ILIM_NEGATIVE
-#define KI_GAIN		0.001
-#define KP_GAIN		0.0005
+#define KI_GAIN_N		0.0005
+#define KP_GAIN_N		0.002
+#define CURRENT_THRESHOLD_N 10.0f
+#define ERROR_DEADBAND_mA_N 3.0f
 
+	static float e_prev = 0.0f;
     static float integral_error = 0.0f;
     static float last_v_set = 0.0f;
-    float current_error = current_mA - IN_LIM_mA;
 	static uint8_t CURRENT_LIMITING_N = 0;
-	float MAX_I_REG = Power_Supply_Settings.V_SET_NEGATIVE + 2.5f;
+	static float current_filtered = 0;
+
 	if(last_v_set != Power_Supply_Settings.V_SET_NEGATIVE)
 	{
 		last_v_set = Power_Supply_Settings.V_SET_NEGATIVE;
 		integral_error = 0;
+		e_prev = 0;
+		current_filtered = current_mA;
+		CURRENT_LIMITING_N = 0;
 	}
-    if (current_error > 0.0f || CURRENT_LIMITING_N)
+	current_filtered += 0.1f * (current_mA - current_filtered);
+	float current_error = current_filtered - IN_LIM_mA;
+
+	if(current_filtered < 0.01) CURRENT_LIMITING_N = 0;
+    if (current_error > CURRENT_THRESHOLD_N || CURRENT_LIMITING_N)
     {
-        // 1. We are over-current, or recovering from it
+    	float MAX_I_REG = -1.0f*(Power_Supply_Settings.V_SET_NEGATIVE + 2.0f);
         CURRENT_LIMITING_N = 1;
 
-        // 2. Accumulate integral error (with anti-windup protection)
-        integral_error += current_error * KI_GAIN;
+        if (fabsf(current_error < ERROR_DEADBAND_mA_N))
+        {
+            current_error = 0.0f;
+        }
+
+        integral_error +=  ( current_error + e_prev ) * KI_GAIN * 0.5;
         if (integral_error > MAX_I_REG) integral_error = MAX_I_REG;
         if (integral_error < 0.0f) integral_error = 0.0f;
 
-        // 3. Compute total voltage reduction (P + I)
-        float v_reduction = (current_error * KP_GAIN) + integral_error;
-
-        // 4. Calculate new target voltage
+        float v_reduction = (current_error * KP_GAIN_N) + integral_error;
         float v_target = Power_Supply_Settings.V_SET_NEGATIVE + v_reduction;
 
-        // 5. Check safety boundaries
-        if (v_target >= -2.5f)
+        //Check safety boundaries
+        if (v_target >= -2.0f)
         {
             DisableOutput(V_Negative);
             integral_error = 0.0f;
             CURRENT_LIMITING_N = 0;
+            e_prev = 0;
         }
-        else if (v_target >= Power_Supply_Settings.V_SET_NEGATIVE)
+        else if (v_target <= Power_Supply_Settings.V_SET_NEGATIVE)
         {
             // Fully recovered to original setpoint
             SetNegativeSupply(Power_Supply_Settings.V_SET_NEGATIVE, 0);
             integral_error = 0.0f;
             CURRENT_LIMITING_N = 0;
+            e_prev = 0;
         }
         else
         {
             // Apply the smoothly throttled voltage
-            SetPositiveSupply(v_target, 0);
+            SetNegativeSupply(v_target, 0);
+            e_prev = current_error;
         }
     }
 }

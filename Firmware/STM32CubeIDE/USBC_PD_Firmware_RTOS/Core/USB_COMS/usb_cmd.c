@@ -348,7 +348,6 @@ void request_usbc_voltage(char *args)
 //	Update_Valid_PDO_Number(0, 2);
 //	Send_Soft_reset_Message(0);
 
-	//TODO: Remove responses here (in usb_cmd.c), add message to queue instead for ResponseTask to handle
 	SerialMsg_t message;
 	message.requesterTask = SRC_USB;
 	message.commandID = USB_PD_GET;
