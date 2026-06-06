@@ -106,7 +106,7 @@
                         <TextBlock Grid.Row="2" Text="Lower" Foreground="Snow" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                         <xctk:DoubleUpDown Grid.Row="2" MinHeight="20" MinWidth="60" Minimum="0" Maximum="20" FormatString="F3" Value="{Binding Voltage_Positive_Limit_Low}" VerticalAlignment="Center" HorizontalAlignment="Center" IsEnabled="{Binding IsChecked, ElementName=adjVP}"/>
 
-                        <Button Name="VPADJ_DOWN" Grid.Row="3" Margin="10" Background="#FF474A52" BorderBrush="Snow" MinWidth="40" ToolTip="Decrease V_Positive (Towards 0V)">
+                            <Button Name="VPADJ_DOWN" Grid.Row="3" Margin="10" Background="#FF474A52" BorderBrush="Snow" MinWidth="40" ToolTip="Decrease V_Positive (Towards 0V)" Command="{Binding DecrementVoltageP}">
                             <Rectangle HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="5" MinWidth="25" Fill="Snow"/>
                         </Button>
                     </Grid>
@@ -169,7 +169,7 @@
                                 <TextBlock Text="Set" FontSize="16" Foreground="Snow"/>
                             </Grid>
                         </Button>
-                        <Button Name="VPADJ_UP" Grid.Row="2" Margin="10" Background="#FF474A52" BorderBrush="Snow" MinWidth="40" ToolTip="Increase V_Positive (Towards 20V)">
+                            <Button Name="VPADJ_UP" Grid.Row="2" Margin="10" Background="#FF474A52" BorderBrush="Snow" MinWidth="40" ToolTip="Increase V_Positive (Towards 20V)" Command="{Binding IncrementVoltageP}">
                             <Grid>
                                 <Rectangle HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="5" MinWidth="25" Fill="Snow"/>
                                 <Rectangle HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="25" MinWidth="5" Fill="Snow"/>
@@ -179,7 +179,7 @@
                 </Grid>
 
                 <Slider Grid.Row="2" Height="10" VerticalAlignment="Top" Margin="10" Background="AliceBlue" BorderBrush="Lime" BorderThickness="1" Value="{Binding Voltage_Positive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="20"/>
-                <TextBox Grid.Row="2" Height="50" VerticalAlignment="Center" Margin="15" FontSize="36" Text="{Binding Voltage_Positive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=F3}"/>
+                <TextBox Grid.Row="2" Height="50" VerticalAlignment="Center" Margin="15" FontSize="36" Text="{Binding Voltage_Positive, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat=F3}"/>
                 <CheckBox IsChecked="{Binding plotPositive.VoltageTrace.Visible}" Name="LogVoltageP" Grid.Row="2" Height="18" VerticalAlignment="Bottom" Content="Log Voltage" Foreground="Snow" Margin="5"/>
                 <CheckBox IsChecked="{Binding plotPositive.CurrentTrace.Visible}" Name="LogCurrentP" Grid.Row="2" Height="18" VerticalAlignment="Bottom" Content="Log Current" Foreground="Snow" Margin="5" HorizontalAlignment="Center"/>
                 <CheckBox IsChecked="{Binding plotPositive.PowerTrace.Visible}" Name="LogPowerP" Grid.Row="2" Height="18" VerticalAlignment="Bottom" Content="Log Power" Foreground="Snow" Margin="5" HorizontalAlignment="Right"/>
@@ -224,7 +224,7 @@
                         <TextBlock Grid.Row="2" Text="Lower" Foreground="Snow" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                         <xctk:DoubleUpDown Grid.Row="2" MinHeight="20" MinWidth="60" Minimum="-20" Maximum="0" FormatString="F3" Value="{Binding Voltage_Negative_Limit_Low}" VerticalAlignment="Center" HorizontalAlignment="Center" IsEnabled="{Binding IsChecked, ElementName=adjVN}"/>
 
-                        <Button Grid.Row="3" Margin="10" Background="#FF474A52" BorderBrush="Snow" MinWidth="40" ToolTip="Decrease V_Negative (Towards -20V)">
+                            <Button Grid.Row="3" Margin="10" Background="#FF474A52" BorderBrush="Snow" MinWidth="40" ToolTip="Decrease V_Negative (Towards -20V)" Command="{Binding DecrementVoltageN}">
                             <Rectangle HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="5" MinWidth="25" Fill="Snow"/>
                         </Button>
                     </Grid>
@@ -287,7 +287,7 @@
                                 <TextBlock Text="Set" FontSize="16" Foreground="Snow"/>
                             </Grid>
                         </Button>
-                        <Button Grid.Row="2" Margin="10" Background="#FF474A52" BorderBrush="Snow" MinWidth="40" ToolTip="Increase V_Negative (Towards 0V)">
+                            <Button Grid.Row="2" Margin="10" Background="#FF474A52" BorderBrush="Snow" MinWidth="40" ToolTip="Increase V_Negative (Towards 0V)"  Command="{Binding IncrementVoltageN}">
                             <Grid>
                                 <Rectangle HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="5" MinWidth="25" Fill="Snow"/>
                                 <Rectangle HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="25" MinWidth="5" Fill="Snow"/>
@@ -297,7 +297,7 @@
                 </Grid>
 
                 <Slider Grid.Row="2" Height="10" VerticalAlignment="Top" Margin="10" Background="AliceBlue" BorderBrush="Lime" BorderThickness="1" FlowDirection="RightToLeft" Value="{Binding Voltage_Negative, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="-20" Maximum="0"/>
-                <TextBox Grid.Row="2" Height="50" VerticalAlignment="Center" Margin="15" FontSize="36" Text="{Binding Voltage_Negative, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=F3}"/>
+                <TextBox Grid.Row="2" Height="50" VerticalAlignment="Center" Margin="15" FontSize="36" Text="{Binding Voltage_Negative, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat=F3}"/>
                 <CheckBox IsChecked="{Binding plotNegative.VoltageTrace.Visible}" Name="LogVoltageN" Grid.Row="2" Height="18" VerticalAlignment="Bottom" Content="Log Voltage" Foreground="Snow" Margin="5"/>
                 <CheckBox IsChecked="{Binding plotNegative.CurrentTrace.Visible}" Name="LogCurrentN" Grid.Row="2" Height="18" VerticalAlignment="Bottom" Content="Log Current" Foreground="Snow" Margin="5" HorizontalAlignment="Center"/>
                 <CheckBox IsChecked="{Binding plotNegative.PowerTrace.Visible}" Name="LogPowerN" Grid.Row="2" Height="18" VerticalAlignment="Bottom" Content="Log Power" Foreground="Snow" Margin="5" HorizontalAlignment="Right"/>

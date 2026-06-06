@@ -15,6 +15,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 
 namespace Power_Supply_Control_WPF
 {
@@ -65,6 +66,12 @@ namespace Power_Supply_Control_WPF
         public IAsyncRelayCommand CurrentLimitP { get; }
         public IAsyncRelayCommand CurrentLimitN { get; }
 
+        public IAsyncRelayCommand IncrementVoltageP { get; }
+        public IAsyncRelayCommand IncrementVoltageN { get; }
+        public IAsyncRelayCommand DecrementVoltageP { get; }
+        public IAsyncRelayCommand DecrementVoltageN { get; }
+
+
         public MeasurementRow SYSTEM;
         public MeasurementRow USB;
         public MeasurementRow V5;
@@ -110,6 +117,10 @@ namespace Power_Supply_Control_WPF
             AddLimts2V5 = new AsyncRelayCommand(AddPlotLim2);
             CurrentLimitP = new AsyncRelayCommand(setILimP);
             CurrentLimitN = new AsyncRelayCommand(setILimN);
+            IncrementVoltageP = new AsyncRelayCommand(IncrementVP);
+            IncrementVoltageN = new AsyncRelayCommand(IncrementVN);
+            DecrementVoltageP = new AsyncRelayCommand(DecrementVP);
+            DecrementVoltageN = new AsyncRelayCommand(DecrementVN);
 
             plotPositive = CreatePlot("Positive Supply");
             plotNegative = CreatePlot("Negative Supply");
@@ -231,7 +242,7 @@ namespace Power_Supply_Control_WPF
             get => VLIM_P_H;
             set
             {
-                if (VLIM_P_H != value && value <= 20 && value > VLIM_P_L)
+                if (VLIM_P_H != value && value <= 20 && value >= VLIM_P_L)
                 {
                     VLIM_P_H = value;
                     OnPropertyChanged();
@@ -244,7 +255,7 @@ namespace Power_Supply_Control_WPF
             get => VLIM_P_L;
             set
             {
-                if (VLIM_P_L != value && value < VLIM_P_H && value >= 0)
+                if (VLIM_P_L != value && value <= VLIM_P_H && value >= 0)
                 {
                     VLIM_P_L = value;
                     OnPropertyChanged();
@@ -257,7 +268,7 @@ namespace Power_Supply_Control_WPF
             get => VLIM_N_H;
             set
             {
-                if (VLIM_N_H != value && value <= 0 && value > VLIM_N_L)
+                if (VLIM_N_H != value && value <= 0 && value >= VLIM_N_L)
                 {
                     VLIM_N_H = value;
                     OnPropertyChanged();
@@ -1180,6 +1191,72 @@ namespace Power_Supply_Control_WPF
                 timerUpdateWindow2.Stop();
             };
             window.Show();
+            return Task.CompletedTask;
+        }
+
+        private float changeValue = 0.1f;
+
+        private Task IncrementVP()
+        {
+            if(Keyboard.IsKeyDown(Key.LeftCtrl))
+            {
+                Voltage_Positive += 0.1*changeValue;
+            }else
+            if (Keyboard.IsKeyDown(Key.LeftShift))
+            {
+                Voltage_Positive += 10 * changeValue;
+            }
+            else
+                Voltage_Positive += changeValue;
+
+            return Task.CompletedTask;
+        }
+
+        private Task IncrementVN()
+        {
+            if (Keyboard.IsKeyDown(Key.LeftCtrl))
+            {
+                Voltage_Negative += 0.1 * changeValue;
+            }
+            else
+            if (Keyboard.IsKeyDown(Key.LeftShift))
+            {
+                Voltage_Negative += 10 * changeValue;
+            }
+            else
+                Voltage_Negative += changeValue;
+            return Task.CompletedTask;
+        }
+
+        private Task DecrementVP()
+        {
+            if (Keyboard.IsKeyDown(Key.LeftCtrl))
+            {
+                Voltage_Positive -= 0.1 * changeValue;
+            }
+            else
+            if (Keyboard.IsKeyDown(Key.LeftShift))
+            {
+                Voltage_Positive -= 10 * changeValue;
+            }
+            else
+                Voltage_Positive -= changeValue;
+            return Task.CompletedTask;
+        }
+
+        private Task DecrementVN()
+        {
+            if (Keyboard.IsKeyDown(Key.LeftCtrl))
+            {
+                Voltage_Negative -= 0.1 * changeValue;
+            }
+            else
+            if (Keyboard.IsKeyDown(Key.LeftShift))
+            {
+                Voltage_Negative -= 10 * changeValue;
+            }
+            else
+                Voltage_Negative -= changeValue;
             return Task.CompletedTask;
         }
     }
