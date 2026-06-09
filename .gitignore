@@ -107,3 +107,14 @@ publish/
 *.pidb
 *.svclog
 *.scc
+
+## Python Environment
+Python/Environment/
+venv/
+.venv/
+
+# Generated reports
+Python/Reports/*.xlsx
+Python/Reports/*.csv
+Python/Reports/*.png
+Python/Reports/*.pdf
