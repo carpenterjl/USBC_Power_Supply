@@ -14,6 +14,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -283,7 +284,7 @@ namespace Power_Supply_Control_WPF
 
         private void buttonMinimize_Click(object sender, RoutedEventArgs e)
         {
-            this.WindowState = WindowState.Minimized;
+            SystemCommands.MinimizeWindow(this);
         }
 
         private void Window_StateChanged(object sender, EventArgs e)

@@ -9,10 +9,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -71,6 +73,8 @@ namespace Power_Supply_Control_WPF
         public IAsyncRelayCommand DecrementVoltageP { get; }
         public IAsyncRelayCommand DecrementVoltageN { get; }
 
+        public IAsyncRelayCommand RunPythonScript_Experimental { get; }
+
 
         public MeasurementRow SYSTEM;
         public MeasurementRow USB;
@@ -85,6 +89,7 @@ namespace Power_Supply_Control_WPF
         private Power_Supply_Control_WPF.Services.AxisManager axisManager = new();
         private readonly MainWindow _mainWindow;
         public ConsoleLogger Logger { get; }
+        private PythonManager _pythonManager = new();
 
         public PSViewModel(PowerSupplyService powerSupplyService, MainWindow main_window, ConsoleLogger logger)
         {
@@ -121,6 +126,7 @@ namespace Power_Supply_Control_WPF
             IncrementVoltageN = new AsyncRelayCommand(IncrementVN);
             DecrementVoltageP = new AsyncRelayCommand(DecrementVP);
             DecrementVoltageN = new AsyncRelayCommand(DecrementVN);
+            RunPythonScript_Experimental = new AsyncRelayCommand(RunUserScript);
 
             plotPositive = CreatePlot("Positive Supply");
             plotNegative = CreatePlot("Negative Supply");
@@ -161,6 +167,16 @@ namespace Power_Supply_Control_WPF
                         }),
                         System.Windows.Threading.DispatcherPriority.Background);
                 };
+
+            _pythonManager.MessageReceived += HandlePythonMessage;
+            _pythonManager.PythonError += msg =>
+            {
+                Logger.Add(ConsoleMessage.LogLevel.Error, "Python", $"{msg}");
+            };
+            _mainWindow.Closing += (s, e) =>
+            {
+                _pythonManager.StopPython();
+            };
         }
 
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -1258,6 +1274,213 @@ namespace Power_Supply_Control_WPF
             else
                 Voltage_Negative -= changeValue;
             return Task.CompletedTask;
+        }
+
+        private static bool PythonLauncherExists()
+        {
+            try
+            {
+                using Process p = new()
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "py",
+                        Arguments = "--version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false
+                    }
+                };
+
+                p.Start();
+                p.WaitForExit(1000);
+
+                return p.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static string? FindPython()
+        {
+            OpenFileDialog dlg = new()
+            {
+                Title = "Select Python Executable from Virtual Environment",
+                Filter = "Python Executable (python.exe)|python.exe",
+                CheckFileExists = true
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                return dlg.FileName;
+            }
+
+            return null;
+            //Commented out code uses command window and "where python" to find system python path
+            //try
+            //{
+            //    using Process p = new()
+            //    {
+            //        StartInfo = new ProcessStartInfo
+            //        {
+            //            FileName = "where",
+            //            Arguments = "python",
+            //            RedirectStandardOutput = true,
+            //            UseShellExecute = false
+            //        }
+            //    };
+            //    p.Start();
+            //    string? path =
+            //        p.StandardOutput.ReadLine();
+            //    p.WaitForExit();
+            //    return path;
+            //}
+            //catch
+            //{
+            //    return null;
+            //}
+        }
+
+        private async Task RunUserScript()
+        {
+            string? pythonPath;
+            //Don't want system python, run virtual environment
+            //if (PythonLauncherExists())
+            //{
+            //    pythonPath = "py";
+            //}
+            //else
+            //{
+            //    pythonPath = FindPython();
+            //}
+            pythonPath = FindPython();
+
+            string? scriptPath = null;
+
+            OpenFileDialog dlg = new()
+            {
+                Title = "Select Python Script",
+                Filter = "Python Script|*.py"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                scriptPath = dlg.FileName;
+            }
+
+            if (pythonPath == null || scriptPath == null)
+                return;
+
+            await _pythonManager.StartAsync(
+                pythonPath,
+                scriptPath);
+        }
+
+        private async void HandlePythonMessage(string json)
+        {
+            string? command = null;
+
+            JsonDocument? doc = null;
+            try
+            {
+                doc = JsonDocument.Parse(json);
+                command = doc.RootElement.GetProperty("command").GetString();
+            }
+            catch
+            {
+                command = null;
+            }
+
+            if (command == null || doc == null)
+            {
+                //Wasn't a command, just print to console
+                Logger.Add(ConsoleMessage.LogLevel.Debug, "Py", json);
+                return;
+            }
+
+            Logger.Add(ConsoleMessage.LogLevel.Command, "Py", command);
+
+            string? supply = "";
+            switch (command)
+            {
+                case "set_voltage":
+                    supply = doc.RootElement.GetProperty("supply").GetString();
+                    double voltage = doc.RootElement.GetProperty("value").GetDouble();
+                    switch (supply)
+                    {
+                        case "P":
+                            await _powerSupplyService.SetVP((float)voltage);
+                            break;
+                        case "N":
+                            await _powerSupplyService.SetVN((float)voltage);
+                            break;
+                        default:
+                            break;
+                    }
+                    await _pythonManager.SendAsync(new { status = "ok" });
+                    break;
+
+                case "read_voltage":
+                    supply = doc.RootElement.GetProperty("supply").GetString();
+                    float? vRead = null;
+                    switch (supply)
+                    {
+                        case "P":
+                            vRead = await _powerSupplyService.ReadVPVoltage();
+                            break;
+                        case "N":
+                            vRead = await _powerSupplyService.ReadVNVoltage();
+                            break;
+                        case "3":
+                            vRead = await _powerSupplyService.ReadV3Voltage();
+                            break;
+                        case "2":
+                            vRead = await _powerSupplyService.ReadV2Voltage();
+                            break;
+                        default:
+                            break;
+                    }
+                    await _pythonManager.SendAsync(new
+                    {
+                        status = "ok",
+                        voltage = vRead
+                    });
+                    break;
+
+                case "read_current":
+                    supply = doc.RootElement.GetProperty("supply").GetString();
+                    float? iRead = null;
+                    switch (supply)
+                    {
+                        case "P":
+                            iRead = await _powerSupplyService.ReadCurrent(USB_Power_Supply_Application.Hardware_Interface.USB_Power_Supply_HW.Current_Sources.I_Positive);
+                            break;
+                        case "N":
+                            iRead = await _powerSupplyService.ReadCurrent(USB_Power_Supply_Application.Hardware_Interface.USB_Power_Supply_HW.Current_Sources.I_Negative);
+                            break;
+                        case "3":
+                            iRead = await _powerSupplyService.ReadCurrent(USB_Power_Supply_Application.Hardware_Interface.USB_Power_Supply_HW.Current_Sources.I_3v3);
+                            break;
+                        case "2":
+                            iRead = await _powerSupplyService.ReadCurrent(USB_Power_Supply_Application.Hardware_Interface.USB_Power_Supply_HW.Current_Sources.I_2v5);
+                            break;
+                        default:
+                            break;
+                    }
+                    await _pythonManager.SendAsync(new
+                    {
+                        status = "ok",
+                        current = iRead
+                    });
+                    break;
+
+                default:
+                    await _pythonManager.SendAsync(new { status = "ERR" });
+                    break;
+            }
+            return;
         }
     }
 }
