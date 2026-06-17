@@ -49,7 +49,7 @@
                     <Button Grid.Column="1" Margin="5" Background="LightGoldenrodYellow" Content="Py" FontSize="32" VerticalContentAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding RunPythonScript_Experimental}"/>
             </Grid>
 
-            <Button Command="{Binding ConnectToTarget}" Grid.Row="0" Grid.Column="0" Width="120" Margin="5" HorizontalAlignment="Left" FontSize="16" ToolTip="Connect to target device.">
+                <Button Command="{Binding ConnectToTarget}" Grid.Row="0" Grid.Column="0" Width="120" Margin="5" HorizontalAlignment="Left" FontSize="16" ToolTip="Connect to target device." WindowChrome.IsHitTestVisibleInChrome="True">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Style.Triggers>

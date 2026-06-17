@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using Power_Supply_Control_WPF.GUI_Elements;
 using Power_Supply_Control_WPF.Services;
 using ScottPlot;
 using ScottPlot.Plottables;
@@ -26,6 +27,7 @@ namespace Power_Supply_Control_WPF
         private bool ConsoleDebugMode = true;
         public event PropertyChangedEventHandler? PropertyChanged;
         private readonly PowerSupplyService _powerSupplyService;
+        private AIConsoleWindow _AIConsole = new();
         private bool autoUpdates = false;
         public ObservableCollection<MeasurementRow> Measurements { get; }  = new();
 
@@ -1474,6 +1476,27 @@ namespace Power_Supply_Control_WPF
                         status = "ok",
                         current = iRead
                     });
+                    break;
+
+                case "launch_llm":
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        _AIConsole = new AIConsoleWindow();
+                        _AIConsole.Show();
+                        _AIConsole.Closing += async (s, e) => { await _pythonManager.SendAsync(new { message = "exit" }); };
+                        _AIConsole.MessageSubmitted += async (sender, userMessage) =>
+                        {
+                            await _pythonManager.SendAsync(new { message = userMessage });
+                        };
+                        _AIConsole.Activate();
+                    });
+                    await _pythonManager.SendAsync(new { status = "ok" });
+                    break;
+
+                case "llm_log":
+                    string response = doc.RootElement.GetProperty("response").ToString();
+                    _AIConsole.AppendSystemMessage(response);
+                    await _pythonManager.SendAsync(new { status = "ok" });
                     break;
 
                 default:
